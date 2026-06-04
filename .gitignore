@@ -1,0 +1,61 @@
+# =============================================================================
+# Orbital — .gitignore
+# =============================================================================
+
+# ── Build output ──────────────────────────────────────────────────────────────
+build/
+out/
+cmake-build-*/
+.build/
+*.ninja
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+CTestTestfile.cmake
+
+# ── Binaries ──────────────────────────────────────────────────────────────────
+*.exe
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
+*.pdb
+*.ilk
+*.exp
+
+# ── IDE files ─────────────────────────────────────────────────────────────────
+.vscode/
+.vs/
+*.suo
+*.user
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.xcodeproj/
+*.xcworkspace/
+.idea/
+*.clangd/
+
+# ── Compile commands (generated, IDE reads from build/) ───────────────────────
+compile_commands.json
+
+# ── ImGui runtime state ───────────────────────────────────────────────────────
+imgui.ini
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+orbital.log
+*.log
+
+# ── macOS ─────────────────────────────────────────────────────────────────────
+.DS_Store
+__MACOSX/
+
+# ── Windows ───────────────────────────────────────────────────────────────────
+Thumbs.db
+desktop.ini
+
+# ── FetchContent cache (keep; speeds up reconfigures) ─────────────────────────
+# Uncomment the next line if you prefer not to commit the cache:
+# _deps/
