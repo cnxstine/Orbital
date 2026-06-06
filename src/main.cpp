@@ -39,7 +39,7 @@ protected:
         ORB_CORE_INFO("OrbitalApplication::OnInit() — pushing initial layers");
         
         auto viewerModule = std::make_unique<OrbitalViewerModule>(GetEngine());
-        auto moduleLayer = std::make_unique<ModuleLayer>();
+        auto moduleLayer = std::make_unique<ModuleLayer>(GetEngine());
         moduleLayer->SetActiveModule(std::move(viewerModule));
         
         GetEngine().PushLayer(std::move(moduleLayer));

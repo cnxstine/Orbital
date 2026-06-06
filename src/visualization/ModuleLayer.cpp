@@ -1,9 +1,14 @@
 #include "visualization/ModuleLayer.hpp"
+#include "visualization/OrbitalViewerModule.hpp"
+#include "visualization/MolecularOrbitalExplorerModule.hpp"
+#include "core/Log.hpp"
+#include <imgui.h>
 
 namespace Orbital {
 
-ModuleLayer::ModuleLayer()
-    : Layer("ModuleLayer")
+ModuleLayer::ModuleLayer(Engine& engine)
+    : Layer("ModuleLayer"),
+      m_Engine(engine)
 {
 }
 
@@ -44,6 +49,23 @@ void ModuleLayer::OnRender()
 
 void ModuleLayer::OnImGui()
 {
+    ORB_CORE_INFO("ModuleLayer::OnImGui called");
+    ImGui::Begin("Module Navigator");
+    const char* moduleNames[] = { "Hydrogen Orbital Explorer", "Bonding Explorer" };
+    int activeIdx = 0;
+    if (dynamic_cast<MolecularOrbitalExplorerModule*>(m_ActiveModule.get())) {
+        activeIdx = 1;
+    }
+
+    if (ImGui::Combo("Active Module", &activeIdx, moduleNames, 2)) {
+        if (activeIdx == 0) {
+            SetActiveModule(std::make_unique<OrbitalViewerModule>(m_Engine));
+        } else if (activeIdx == 1) {
+            SetActiveModule(std::make_unique<MolecularOrbitalExplorerModule>(m_Engine));
+        }
+    }
+    ImGui::End();
+
     if (m_ActiveModule) {
         m_ActiveModule->OnParameterPanel();
     }

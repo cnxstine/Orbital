@@ -162,6 +162,10 @@ add_library(orbital_visualization STATIC
     visualization/StochasticProbabilityCloud.cpp
     visualization/OrbitalViewerModule.cpp
     visualization/ModuleLayer.cpp
+    visualization/MolecularOrbitalExplorerModule.cpp
+    visualization/OverlapIntegral.cpp
+    visualization/MolecularEnergyModel.cpp
+    visualization/EnergySweep.cpp
 )
 
 target_include_directories(orbital_visualization

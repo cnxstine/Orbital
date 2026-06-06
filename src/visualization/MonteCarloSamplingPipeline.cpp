@@ -1,6 +1,7 @@
 #include "visualization/MonteCarloSamplingPipeline.hpp"
 #include "visualization/HydrogenOrbitalData.hpp"
 #include "visualization/HydrogenicOrbital.hpp"
+#include "visualization/BondingWaveFunction.hpp"
 #include "visualization/StochasticProbabilityCloud.hpp"
 #include "core/Log.hpp"
 #include "core/Assert.hpp"
@@ -237,6 +238,11 @@ Result<void> MonteCarloSamplingPipeline::SampleMCMC(const WaveFunction& source,
             maxDensity = 1.0 / (8.0 * std::numbers::pi);
         } else if (qn.n == 2 && qn.l == 1) {
             maxDensity = std::exp(-2.0) / (8.0 * std::numbers::pi);
+        }
+    } else {
+        const auto* bondingWF = dynamic_cast<const BondingWaveFunction*>(&source);
+        if (bondingWF) {
+            maxDensity = bondingWF->GetMaxDensity();
         }
     }
 

@@ -1,9 +1,23 @@
 #include <gtest/gtest.h>
 #include "visualization/HydrogenicOrbital.hpp"
+#include "visualization/BondingWaveFunction.hpp"
+#include "visualization/OverlapIntegral.hpp"
+#include "visualization/MolecularEnergyModel.hpp"
+#include "visualization/EnergySweep.hpp"
+#include "core/Log.hpp"
 #include <cmath>
 #include <numbers>
 
 using namespace Orbital;
+
+class LogEnvironment : public ::testing::Environment {
+public:
+    void SetUp() override {
+        Log::Init();
+    }
+};
+
+::testing::Environment* const logEnv = ::testing::AddGlobalTestEnvironment(new LogEnvironment);
 
 // Tolerance for floating point comparisons
 constexpr double EPSILON = 1e-7;
@@ -197,4 +211,173 @@ TEST(HydrogenOrbitalTests, Validate2pyOrbital)
     EXPECT_LT(negativeY.real(), 0.0);
     EXPECT_NEAR(std::abs(positiveY.real()), std::abs(negativeY.real()), EPSILON);
 }
+
+TEST(HydrogenOrbitalTests, ValidateLCAOBondingExplorer)
+{
+    // Create atomic 1s orbitals
+    auto orbitalA = std::make_shared<HydrogenicOrbital>(1, 0, 0, 0.5, false);
+    auto orbitalB = std::make_shared<HydrogenicOrbital>(1, 0, 0, 0.5, false);
+
+    double separations[] = { 10.0, 6.0, 3.0, 1.5 };
+
+    for (double separation : separations) {
+        // 1. Bonding State Verification: ψ+ = ψA + ψB
+        BondingWaveFunction psiPlus(orbitalA, orbitalB, static_cast<float>(separation), BondingWaveFunction::StateType::Bonding);
+
+        // Midpoint at x = 0
+        glm::vec3 midpoint(0.0f, 0.0f, 0.0f);
+        glm::vec3 nucleusA(-separation * 0.5f, 0.0f, 0.0f);
+        glm::vec3 nucleusB(separation * 0.5f, 0.0f, 0.0f);
+
+        double denA_bonding = psiPlus.ProbabilityDensity(nucleusA);
+        double denB_bonding = psiPlus.ProbabilityDensity(nucleusB);
+        double denMid_bonding = psiPlus.ProbabilityDensity(midpoint);
+
+        // Symmetry check
+        EXPECT_NEAR(denA_bonding, denB_bonding, EPSILON);
+
+        // Constructive interference check: midpoint density compared to isolated atoms
+        // An isolated atom centered at A evaluated at midpoint:
+        double denMid_isolatedA = std::norm(orbitalA->Evaluate(midpoint - nucleusA));
+        // Theoretical density with zero overlap would be: 2 * denMid_isolatedA (for 2 independent probability densities)
+        // With LCAO wavefunction, it is (psi_A + psi_B)^2 = 4 * psi_A(midpoint)^2 = 4 * denMid_isolatedA.
+        // Therefore, denMid_bonding must be exactly 4 * denMid_isolatedA.
+        EXPECT_NEAR(denMid_bonding, 4.0 * denMid_isolatedA, EPSILON);
+
+        // Qualitative behavior as separation decreases:
+        // Midpoint density should increase significantly.
+        if (separation == 10.0) {
+            EXPECT_LT(denMid_bonding, 1e-4);
+        } else if (separation == 1.5) {
+            EXPECT_GT(denMid_bonding, 0.1);
+        }
+
+        // 2. Antibonding State Verification: ψ- = ψA - ψB
+        BondingWaveFunction psiMinus(orbitalA, orbitalB, static_cast<float>(separation), BondingWaveFunction::StateType::Antibonding);
+
+        double denA_anti = psiMinus.ProbabilityDensity(nucleusA);
+        double denB_anti = psiMinus.ProbabilityDensity(nucleusB);
+        double denMid_anti = psiMinus.ProbabilityDensity(midpoint);
+
+        // Midpoint density MUST be EXACTLY zero due to perfect destructive interference (nodal plane)
+        EXPECT_NEAR(denMid_anti, 0.0, EPSILON);
+
+        // Entire yz-plane at x = 0 must be a nodal plane. Let's test a few offset points on x = 0 plane.
+        EXPECT_NEAR(psiMinus.ProbabilityDensity({0.0f, 1.0f, 0.0f}), 0.0, EPSILON);
+        EXPECT_NEAR(psiMinus.ProbabilityDensity({0.0f, 0.0f, 2.0f}), 0.0, EPSILON);
+        EXPECT_NEAR(psiMinus.ProbabilityDensity({0.0f, 1.5f, -1.5f}), 0.0, EPSILON);
+
+        // Symmetry check for nuclei density in antibonding
+        EXPECT_NEAR(denA_anti, denB_anti, EPSILON);
+
+        // 3. Isolated core states verification
+        BondingWaveFunction psiA_only(orbitalA, orbitalB, static_cast<float>(separation), BondingWaveFunction::StateType::OrbitalA);
+        BondingWaveFunction psiB_only(orbitalA, orbitalB, static_cast<float>(separation), BondingWaveFunction::StateType::OrbitalB);
+
+        // ψA only should have peak at nucleus A and decay towards nucleus B
+        double peakA = psiA_only.ProbabilityDensity(nucleusA);
+        double peakB_for_A = psiA_only.ProbabilityDensity(nucleusB);
+        EXPECT_GT(peakA, 0.1);
+        double expectedRatio = std::exp(2.0 * separation);
+        EXPECT_NEAR(peakA / peakB_for_A, expectedRatio, expectedRatio * 1e-5);
+
+        // ψB only should have peak at nucleus B and decay towards nucleus A
+        double peakB = psiB_only.ProbabilityDensity(nucleusB);
+        double peakA_for_B = psiB_only.ProbabilityDensity(nucleusA);
+        EXPECT_GT(peakB, 0.1);
+        EXPECT_NEAR(peakB / peakA_for_B, expectedRatio, expectedRatio * 1e-5);
+
+        // Output results for the validation report
+        std::cout << "[LCAO VALIDATION] Separation: " << separation << " Bohr" << std::endl;
+        std::cout << "  - Isolated (psi_A) at A (nucleus): " << peakA << ", at B (remote): " << peakB_for_A << std::endl;
+        std::cout << "  - Bonding (psi_A + psi_B) max: " << psiPlus.GetMaxDensity() << ", at midpoint (overlap): " << denMid_bonding << std::endl;
+        std::cout << "  - Antibonding (psi_A - psi_B) max: " << psiMinus.GetMaxDensity() << ", at midpoint: " << denMid_anti << std::endl;
+        std::cout << "  - Nodal plane at x=0 check: " << (denMid_anti < 1e-15 ? "Present (Density = 0.0)" : "Absent") << std::endl;
+    }
+}
+
+TEST(HydrogenOrbitalTests, ValidateOverlapIntegral)
+{
+    // 1. Specific check: S_analytical(2.0) ≈ 0.586453
+    double s_anal_2 = OverlapIntegral::ComputeAnalytical1s(2.0f);
+    EXPECT_NEAR(s_anal_2, 0.586453, 1e-5);
+
+    // 2. Overlap approaches zero at large separation
+    double s_anal_10 = OverlapIntegral::ComputeAnalytical1s(10.0f);
+    EXPECT_LT(s_anal_10, 3e-3);
+
+    HydrogenicOrbital orbitalA(1, 0, 0, 0.5, false);
+    HydrogenicOrbital orbitalB(1, 0, 0, 0.5, false);
+    double s_num_10 = OverlapIntegral::ComputeNumerical(orbitalA, orbitalB, 10.0f, 60);
+    EXPECT_LT(s_num_10, 3e-3);
+
+    // 3. Numerical vs Analytical accuracy at R = 2.0 Bohr
+    double s_num_2 = OverlapIntegral::ComputeNumerical(orbitalA, orbitalB, 2.0f, 60);
+    EXPECT_NEAR(s_num_2, s_anal_2, 1e-3);
+}
+
+TEST(HydrogenOrbitalTests, ValidateMolecularEnergyModel)
+{
+    double separations[] = { 1.0, 1.5, 2.0, 3.0, 6.0, 10.0 };
+
+    for (double sep : separations) {
+        double S = OverlapIntegral::ComputeAnalytical1s(static_cast<float>(sep));
+        EnergyResult energy = MolecularEnergyModel::ComputeEnergies(static_cast<float>(sep), S);
+
+        // Bonding energy must be strictly lower than antibonding energy
+        EXPECT_LT(energy.bondingEnergy, energy.antibondingEnergy);
+
+        // At large separations, both energies should approach -13.605693 eV
+        if (sep == 10.0) {
+            EXPECT_NEAR(energy.bondingEnergy, -13.605693, 0.02);
+            EXPECT_NEAR(energy.antibondingEnergy, -13.605693, 0.02);
+        }
+    }
+}
+
+TEST(HydrogenOrbitalTests, ValidateEnergySweep)
+{
+    SweepResult sweep = EnergySweep::RunSweep(0.5f, 10.0f, 0.05f);
+
+    // Export to CSV to verify the exporter code and generate the required deliverable
+    bool success = EnergySweep::ExportToCSV(sweep, "exports/h2_energy_curve.csv");
+    EXPECT_TRUE(success);
+
+    // Equilibrium bond distance for LCAO H2+ is ~2.5 Bohr
+    EXPECT_GT(sweep.equilibriumSeparation, 2.3f);
+    EXPECT_LT(sweep.equilibriumSeparation, 2.7f);
+
+    // Minimum bonding energy should be around -15.37 eV
+    EXPECT_GT(sweep.minimumBondingEnergy, -15.5);
+    EXPECT_LT(sweep.minimumBondingEnergy, -15.2);
+}
+
+TEST(HydrogenOrbitalTests, ValidateNumericalOverlapConvergence)
+{
+    HydrogenicOrbital orbitalA(1, 0, 0, 0.5, false);
+    HydrogenicOrbital orbitalB(1, 0, 0, 0.5, false);
+    
+    double S_analytical = OverlapIntegral::ComputeAnalytical1s(2.0f);
+
+    // Measure error at different grid resolutions
+    int resolutions[] = { 20, 40, 60, 80 };
+    double errors[4];
+
+    for (int i = 0; i < 4; ++i) {
+        double S_numerical = OverlapIntegral::ComputeNumerical(orbitalA, orbitalB, 2.0f, resolutions[i]);
+        errors[i] = std::abs(S_analytical - S_numerical);
+        std::cout << "[CONVERGENCE TEST] Grid: " << resolutions[i] << "^3 | Error: " << errors[i] << std::endl;
+    }
+
+    // Verify error is small at 60^3 and 80^3
+    EXPECT_LT(errors[2], 1e-4); // 60^3
+    EXPECT_LT(errors[3], 1e-4); // 80^3
+
+    // Verify convergence: error decreases from 20^3 to 60^3
+    EXPECT_LT(errors[2], errors[0]);
+    // Verify convergence: error decreases from 40^3 to 80^3
+    EXPECT_LT(errors[3], errors[1]);
+}
+
+
 

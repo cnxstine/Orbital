@@ -7,6 +7,7 @@ layout(binding = 0) uniform sampler2D u_DensityTexture;
 
 uniform float u_Exposure = 1.0;
 uniform float u_Gamma = 2.2;
+uniform float u_Contrast = 1.0;
 
 vec3 GetDensityColor(float t) {
     // Color ramp control points:
@@ -34,6 +35,9 @@ void main() {
     // Tone mapping (exposure)
     float t = 1.0 - exp(-rawDensity * u_Exposure);
     t = clamp(t, 0.0, 1.0);
+    
+    // Contrast (power scaling)
+    t = pow(t, u_Contrast);
     
     vec3 color = GetDensityColor(t);
     

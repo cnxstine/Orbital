@@ -10,10 +10,14 @@
 #include <memory>
 
 namespace Orbital {
+    class Engine;
+}
+
+namespace Orbital {
 
 class ModuleLayer : public Layer {
 public:
-    ModuleLayer();
+    explicit ModuleLayer(Engine& engine);
     virtual ~ModuleLayer() override;
 
     // Layer overrides
@@ -26,8 +30,10 @@ public:
 
     void SetActiveModule(std::unique_ptr<VisualizationModule> module);
     [[nodiscard]] VisualizationModule* GetActiveModule() const noexcept { return m_ActiveModule.get(); }
+    [[nodiscard]] Engine& GetEngine() const noexcept { return m_Engine; }
 
 private:
+    Engine& m_Engine;
     std::unique_ptr<VisualizationModule> m_ActiveModule;
 };
 

@@ -13,6 +13,8 @@
 #include "visualization/StochasticProbabilityCloud.hpp"
 #include "resources/loaders/ShaderLoader.hpp"
 #include "core/Log.hpp"
+#include "visualization/ModuleLayer.hpp"
+#include "visualization/MolecularOrbitalExplorerModule.hpp"
 #include <filesystem>
 #include <fstream>
 #include <vector>
@@ -171,18 +173,48 @@ void OrbitalViewerModule::UpdateOrbitalStateFromSelection()
     switch (m_SelectedState) {
         case SelectedState::H_1s:
             m_QuantumN = 1; m_QuantumL = 0; m_QuantumM = 0; m_IsRealCombo = false;
+            if (m_ExposureMode == ExposureMode::PerOrbital) {
+                m_Exposure = 1.2f;
+                m_IntensityScale = 0.3f;
+                m_ParticleSize = 3.5f;
+                m_Contrast = 1.0f;
+            }
             break;
         case SelectedState::H_2s:
             m_QuantumN = 2; m_QuantumL = 0; m_QuantumM = 0; m_IsRealCombo = false;
+            if (m_ExposureMode == ExposureMode::PerOrbital) {
+                m_Exposure = 3.8f;
+                m_IntensityScale = 0.6f;
+                m_ParticleSize = 4.0f;
+                m_Contrast = 1.2f;
+            }
             break;
         case SelectedState::H_2p_x:
             m_QuantumN = 2; m_QuantumL = 1; m_QuantumM = 1; m_IsRealCombo = true;
+            if (m_ExposureMode == ExposureMode::PerOrbital) {
+                m_Exposure = 2.8f;
+                m_IntensityScale = 0.5f;
+                m_ParticleSize = 4.0f;
+                m_Contrast = 1.0f;
+            }
             break;
         case SelectedState::H_2p_y:
             m_QuantumN = 2; m_QuantumL = 1; m_QuantumM = -1; m_IsRealCombo = true;
+            if (m_ExposureMode == ExposureMode::PerOrbital) {
+                m_Exposure = 2.8f;
+                m_IntensityScale = 0.5f;
+                m_ParticleSize = 4.0f;
+                m_Contrast = 1.0f;
+            }
             break;
         case SelectedState::H_2p_z:
             m_QuantumN = 2; m_QuantumL = 1; m_QuantumM = 0; m_IsRealCombo = true;
+            if (m_ExposureMode == ExposureMode::PerOrbital) {
+                m_Exposure = 2.8f;
+                m_IntensityScale = 0.5f;
+                m_ParticleSize = 4.0f;
+                m_Contrast = 1.0f;
+            }
             break;
     }
 }
@@ -251,6 +283,7 @@ void OrbitalViewerModule::RenderFrameInternal()
         resolveShader->Bind();
         resolveShader->SetUniform("u_Exposure", m_Exposure);
         resolveShader->SetUniform("u_Gamma", m_Gamma);
+        resolveShader->SetUniform("u_Contrast", m_Contrast);
 
         // Bind the density texture
         const GLTexture& densityTexture = m_Framebuffer->GetColorAttachment(0);
@@ -286,12 +319,22 @@ void OrbitalViewerModule::Render()
             originalRadius = controller->GetRadius();
             originalTheta = controller->GetTheta();
             originalPhi = controller->GetPhi();
-
-            // Set standardized viewpoint for captures: pivot=0, radius=8, theta=45 deg, phi=60 deg
-            controller->SetViewPoint({0.0f, 0.0f, 0.0f}, 8.0f, glm::radians(45.0f), glm::radians(60.0f));
         }
 
         std::filesystem::create_directories("screenshots");
+
+        struct CameraPreset {
+            const char* name;
+            float theta;
+            float phi;
+        };
+
+        CameraPreset cameraPresets[] = {
+            { "standard", glm::radians(45.0f), glm::radians(60.0f) },
+            { "front",    glm::radians(90.0f), glm::radians(90.0f) },
+            { "side",     glm::radians(0.0f),  glm::radians(90.0f) },
+            { "top",      glm::radians(0.0f),  glm::radians(0.001f) }
+        };
 
         SelectedState statesToCapture[] = {
             SelectedState::H_1s,
@@ -300,12 +343,13 @@ void OrbitalViewerModule::Render()
             SelectedState::H_2p_y,
             SelectedState::H_2p_z
         };
-        const char* filenames[] = {
-            "screenshots/hydrogen_1s.bmp",
-            "screenshots/hydrogen_2s.bmp",
-            "screenshots/hydrogen_2px.bmp",
-            "screenshots/hydrogen_2py.bmp",
-            "screenshots/hydrogen_2pz.bmp"
+
+        const char* stateNames[] = {
+            "1s",
+            "2s",
+            "2px",
+            "2py",
+            "2pz"
         };
 
         for (int i = 0; i < 5; ++i) {
@@ -316,20 +360,27 @@ void OrbitalViewerModule::Render()
             m_ProbabilityCloud->SetWaveFunction(m_ActiveOrbital);
             m_ProbabilityCloud->Resample(m_ActiveSampleCount);
 
-            RenderFrameInternal();
+            for (const auto& preset : cameraPresets) {
+                if (controller) {
+                    controller->SetViewPoint({0.0f, 0.0f, 0.0f}, 8.0f, preset.theta, preset.phi);
+                }
 
-            // Read the backbuffer
-            uint32_t width = m_Engine.GetWindow().GetWidth();
-            uint32_t height = m_Engine.GetWindow().GetHeight();
-            std::vector<uint8_t> pixels(width * height * 3);
-            glPixelStorei(GL_PACK_ALIGNMENT, 1);
-            glFinish(); // Ensure all GPU rendering commands have completed
-            glReadPixels(0, 0, static_cast<GLsizei>(width), static_cast<GLsizei>(height), GL_RGB, GL_UNSIGNED_BYTE, pixels.data());
+                RenderFrameInternal();
 
-            if (SaveBMP(filenames[i], static_cast<int>(width), static_cast<int>(height), pixels.data())) {
-                ORB_CORE_INFO("Saved orbital screenshot: {}", filenames[i]);
-            } else {
-                ORB_CORE_ERROR("Failed to save orbital screenshot: {}", filenames[i]);
+                // Read the backbuffer
+                uint32_t width = m_Engine.GetWindow().GetWidth();
+                uint32_t height = m_Engine.GetWindow().GetHeight();
+                std::vector<uint8_t> pixels(width * height * 3);
+                glPixelStorei(GL_PACK_ALIGNMENT, 1);
+                glFinish(); // Ensure all GPU rendering commands have completed
+                glReadPixels(0, 0, static_cast<GLsizei>(width), static_cast<GLsizei>(height), GL_RGB, GL_UNSIGNED_BYTE, pixels.data());
+
+                std::string filename = "screenshots/hydrogen_" + std::string(stateNames[i]) + "_" + std::string(preset.name) + ".bmp";
+                if (SaveBMP(filename, static_cast<int>(width), static_cast<int>(height), pixels.data())) {
+                    ORB_CORE_INFO("Saved orbital screenshot: {}", filename);
+                } else {
+                    ORB_CORE_ERROR("Failed to save orbital screenshot: {}", filename);
+                }
             }
         }
 
@@ -347,8 +398,20 @@ void OrbitalViewerModule::Render()
         }
 
         if (m_AutoExitAfterGeneration) {
-            ORB_CORE_INFO("Auto-exit requested after generating verification package. Requesting shutdown...");
-            m_Engine.RequestShutdown();
+            ORB_CORE_INFO("Auto-exit requested after generating verification package. Transitioning to BondingExplorerModule...");
+            ModuleLayer* moduleLayer = nullptr;
+            for (auto& layer : m_Engine.GetLayerStack()) {
+                moduleLayer = dynamic_cast<ModuleLayer*>(layer.get());
+                if (moduleLayer) {
+                    break;
+                }
+            }
+            if (moduleLayer) {
+                moduleLayer->SetActiveModule(std::make_unique<MolecularOrbitalExplorerModule>(m_Engine));
+            } else {
+                ORB_CORE_WARN("Could not find ModuleLayer, requesting immediate shutdown.");
+                m_Engine.RequestShutdown();
+            }
         }
     } else {
         RenderFrameInternal();
@@ -358,6 +421,11 @@ void OrbitalViewerModule::Render()
 void OrbitalViewerModule::OnParameterPanel()
 {
     ImGui::Begin("Quantum Chemistry & Performance Controls");
+
+    ImGui::Text("Current Module:");
+    ImGui::BulletText("Hydrogen Orbital Explorer (ACTIVE)");
+    ImGui::BulletText("Molecular Orbital Explorer");
+    ImGui::Separator();
 
     // Quantum Chemistry Selection
     ImGui::Text("Quantum State Selector");
@@ -377,6 +445,19 @@ void OrbitalViewerModule::OnParameterPanel()
     if (ImGui::Combo("Sample Count", &m_SelectedSampleCountIdx, sampleCountLabels, 4)) {
         m_ActiveSampleCount = sampleCountValues[m_SelectedSampleCountIdx];
         qnChanged = true;
+    }
+
+    // Swappable exposure mode selector
+    const char* exposureModeLabels[] = { "Manual", "PerOrbital (Auto)", "HistogramBased" };
+    int expModeIdx = static_cast<int>(m_ExposureMode);
+    if (ImGui::Combo("Exposure Mode", &expModeIdx, exposureModeLabels, 3)) {
+        m_ExposureMode = static_cast<ExposureMode>(expModeIdx);
+        if (m_ExposureMode == ExposureMode::PerOrbital) {
+            UpdateOrbitalStateFromSelection();
+        }
+    }
+    if (m_ExposureMode == ExposureMode::HistogramBased) {
+        ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.3f, 1.0f), "Histogram mode: using manual exposure fallback.");
     }
 
     if (qnChanged) {
@@ -411,11 +492,35 @@ void OrbitalViewerModule::OnParameterPanel()
 
     ImGui::Separator();
 
+    // Camera Presets
+    ImGui::Text("Camera Presets");
+    auto* controller = dynamic_cast<ArcballController*>(m_Engine.GetCameraManager().GetController());
+    if (controller) {
+        if (ImGui::Button("Standard View")) {
+            controller->SetViewPoint({0.0f, 0.0f, 0.0f}, 8.0f, glm::radians(45.0f), glm::radians(60.0f));
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Top (XZ)")) {
+            controller->SetViewPoint({0.0f, 0.0f, 0.0f}, 8.0f, glm::radians(0.0f), glm::radians(0.001f));
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Front (XY)")) {
+            controller->SetViewPoint({0.0f, 0.0f, 0.0f}, 8.0f, glm::radians(90.0f), glm::radians(90.0f));
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Side (YZ)")) {
+            controller->SetViewPoint({0.0f, 0.0f, 0.0f}, 8.0f, glm::radians(0.0f), glm::radians(90.0f));
+        }
+    }
+
+    ImGui::Separator();
+
     // Visual configurations
     ImGui::Text("Visualization Options");
     ImGui::SliderFloat("Particle Size", &m_ParticleSize, 1.0f, 16.0f);
     ImGui::SliderFloat("Intensity Scale", &m_IntensityScale, 0.01f, 2.0f);
     ImGui::SliderFloat("Exposure", &m_Exposure, 0.1f, 5.0f);
+    ImGui::SliderFloat("Contrast", &m_Contrast, 0.1f, 3.0f);
     ImGui::SliderFloat("Gamma Correction", &m_Gamma, 1.0f, 3.0f);
 
     ImGui::Separator();
