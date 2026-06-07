@@ -166,6 +166,8 @@ add_library(orbital_visualization STATIC
     visualization/OverlapIntegral.cpp
     visualization/MolecularEnergyModel.cpp
     visualization/EnergySweep.cpp
+    visualization/LCAOMolecularOrbital.cpp
+    visualization/MolecularOrbitalFactory.cpp
 )
 
 target_include_directories(orbital_visualization

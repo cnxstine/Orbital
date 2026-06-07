@@ -4,6 +4,8 @@
 #include "core/Log.hpp"
 #include "core/Assert.hpp"
 
+#include <imgui.h>
+
 namespace Orbital {
 
 CameraManager::CameraManager(EventBus& bus)
@@ -18,6 +20,10 @@ CameraManager::CameraManager(EventBus& bus)
     // Mouse input → forward to active controller
     m_MouseButtonToken = bus.Subscribe<MouseButtonPressedEvent>(
         [this](const MouseButtonPressedEvent& e) {
+            if (ImGui::GetCurrentContext() != nullptr && ImGui::GetIO().WantCaptureMouse) {
+                const_cast<MouseButtonPressedEvent&>(e).Handled = true;
+                return true;
+            }
             if (!m_Controller) return false;
             return m_Controller->OnEvent(const_cast<MouseButtonPressedEvent&>(e));
         });
@@ -36,6 +42,10 @@ CameraManager::CameraManager(EventBus& bus)
 
     m_MouseScrollToken = bus.Subscribe<MouseScrolledEvent>(
         [this](const MouseScrolledEvent& e) {
+            if (ImGui::GetCurrentContext() != nullptr && ImGui::GetIO().WantCaptureMouse) {
+                const_cast<MouseScrolledEvent&>(e).Handled = true;
+                return true;
+            }
             if (!m_Controller) return false;
             return m_Controller->OnEvent(const_cast<MouseScrolledEvent&>(e));
         });
@@ -76,6 +86,12 @@ void CameraManager::OnUpdate(float dt)
 
 bool CameraManager::OnEvent(Event& event)
 {
+    if (ImGui::GetCurrentContext() != nullptr && ImGui::GetIO().WantCaptureMouse) {
+        if (event.GetType() == EventType::MouseButtonPressed || event.GetType() == EventType::MouseScrolled) {
+            event.Handled = true;
+            return true;
+        }
+    }
     if (m_Controller) return m_Controller->OnEvent(event);
     return false;
 }

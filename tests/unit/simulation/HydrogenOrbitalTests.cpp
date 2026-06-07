@@ -4,7 +4,13 @@
 #include "visualization/OverlapIntegral.hpp"
 #include "visualization/MolecularEnergyModel.hpp"
 #include "visualization/EnergySweep.hpp"
+#include "visualization/MolecularOrbitalFactory.hpp"
+#include "visualization/MolecularOrbitalType.hpp"
+#include "camera/CameraManager.hpp"
+#include "camera/CameraController.hpp"
+#include "events/events/InputEvents.hpp"
 #include "core/Log.hpp"
+#include <imgui.h>
 #include <cmath>
 #include <numbers>
 
@@ -377,6 +383,232 @@ TEST(HydrogenOrbitalTests, ValidateNumericalOverlapConvergence)
     EXPECT_LT(errors[2], errors[0]);
     // Verify convergence: error decreases from 40^3 to 80^3
     EXPECT_LT(errors[3], errors[1]);
+}
+
+TEST(HydrogenOrbitalTests, Validate2pMolecularOrbitals)
+{
+    // 1. Construct 2p molecular orbitals at R = 3.0 Bohr using the factory
+    float R = 3.0f;
+    auto sigma2p = MolecularOrbitalFactory::Create(MolecularOrbitalType::Sigma2p, R);
+    auto sigma2p_star = MolecularOrbitalFactory::Create(MolecularOrbitalType::Sigma2pStar, R);
+    auto pi2p_x = MolecularOrbitalFactory::Create(MolecularOrbitalType::Pi2pX, R);
+    auto pi2p_x_star = MolecularOrbitalFactory::Create(MolecularOrbitalType::Pi2pXStar, R);
+    auto pi2p_y = MolecularOrbitalFactory::Create(MolecularOrbitalType::Pi2pY, R);
+    auto pi2p_y_star = MolecularOrbitalFactory::Create(MolecularOrbitalType::Pi2pYStar, R);
+
+    // Verify types, classifications, and labels
+    EXPECT_EQ(sigma2p->GetLabel(), "σ(2p)");
+    EXPECT_EQ(sigma2p_star->GetLabel(), "σ*(2p)");
+    EXPECT_EQ(pi2p_x->GetLabel(), "π(2p_x)");
+    EXPECT_EQ(pi2p_x_star->GetLabel(), "π*(2p_x)");
+
+    // 2. Midpoint density ordering validation at R = 3.0 Bohr
+    // Midpoint is x = 0. We evaluate at a small transverse offset z = 0.5 Bohr to verify π orbital density.
+    glm::vec3 midpoint_offset(0.0f, 0.0f, 0.5f);
+    double den_sigma = sigma2p->ProbabilityDensity(midpoint_offset);
+    double den_pi = pi2p_x->ProbabilityDensity(midpoint_offset);
+    double den_pi_star = pi2p_x_star->ProbabilityDensity(midpoint_offset);
+    double den_sigma_star = sigma2p_star->ProbabilityDensity(midpoint_offset);
+
+    // σ(2p) > π(2p) > π*(2p) >= σ*(2p) at the midpoint plane (with transverse offset)
+    EXPECT_GT(den_sigma, den_pi);
+    EXPECT_GT(den_pi, den_pi_star);
+    EXPECT_NEAR(den_pi_star, 0.0, EPSILON);
+    EXPECT_NEAR(den_sigma_star, 0.0, EPSILON);
+
+    // 3. Nodal plane validation at x = 0 (midpoint plane)
+    // For all antibonding states, x = 0 must be a nodal plane (zero density)
+    glm::vec3 test_points_x0[] = {
+        {0.0f, 0.0f, 0.0f},
+        {0.0f, 1.0f, 0.0f},
+        {0.0f, 0.0f, 2.0f},
+        {0.0f, -1.5f, 1.5f}
+    };
+    for (const auto& pt : test_points_x0) {
+        EXPECT_NEAR(sigma2p_star->ProbabilityDensity(pt), 0.0, EPSILON);
+        EXPECT_NEAR(pi2p_x_star->ProbabilityDensity(pt), 0.0, EPSILON);
+        EXPECT_NEAR(pi2p_y_star->ProbabilityDensity(pt), 0.0, EPSILON);
+    }
+
+    // 4. Bond axis nodal plane validation for π orbitals
+    // π(2p_x) is formed by 2p_z orbitals, so z = 0 is a nodal plane containing the bond axis
+    glm::vec3 test_points_z0[] = {
+        {0.0f, 0.0f, 0.0f},
+        {-1.0f, 1.0f, 0.0f},
+        {1.5f, -0.5f, 0.0f}
+    };
+    for (const auto& pt : test_points_z0) {
+        EXPECT_NEAR(pi2p_x->ProbabilityDensity(pt), 0.0, EPSILON);
+        EXPECT_NEAR(pi2p_x_star->ProbabilityDensity(pt), 0.0, EPSILON);
+    }
+
+    // π(2p_y) is formed by 2p_y orbitals, so y = 0 is a nodal plane containing the bond axis
+    glm::vec3 test_points_y0[] = {
+        {0.0f, 0.0f, 0.0f},
+        {-1.0f, 0.0f, 1.0f},
+        {1.5f, 0.0f, -0.5f}
+    };
+    for (const auto& pt : test_points_y0) {
+        EXPECT_NEAR(pi2p_y->ProbabilityDensity(pt), 0.0, EPSILON);
+        EXPECT_NEAR(pi2p_y_star->ProbabilityDensity(pt), 0.0, EPSILON);
+    }
+}
+
+TEST(HydrogenOrbitalTests, ValidateEnergyCurveExplorer)
+{
+    // 1. Run the sweep using EnergySweep
+    SweepResult sweep = EnergySweep::RunSweep(0.5f, 10.0f, 0.05f);
+
+    // 2. Verify sweep data is monotonic in separation
+    // Separation must be strictly increasing.
+    // Overlap S(R) must be strictly decreasing.
+    // Antibonding energy E-(R) must be strictly decreasing (strictly monotonic).
+    for (size_t i = 1; i < sweep.points.size(); ++i) {
+        EXPECT_GT(sweep.points[i].separation, sweep.points[i-1].separation);
+        EXPECT_LT(sweep.points[i].overlap, sweep.points[i-1].overlap);
+        EXPECT_LT(sweep.points[i].antibondingEnergy, sweep.points[i-1].antibondingEnergy);
+    }
+
+    // 3. Verify bonding minimum remains near 2.5 Bohr
+    EXPECT_GT(sweep.equilibriumSeparation, 2.3f);
+    EXPECT_LT(sweep.equilibriumSeparation, 2.7f);
+    EXPECT_GT(sweep.minimumBondingEnergy, -15.5);
+    EXPECT_LT(sweep.minimumBondingEnergy, -15.2);
+
+    // 4. Verify marker lookup returns the correct energy values
+    // Find the closest sweep point to a target separation
+    auto lookupClosest = [&](float targetSep) -> SweepPoint {
+        float minDiff = std::numeric_limits<float>::max();
+        SweepPoint closestPt{};
+        for (const auto& pt : sweep.points) {
+            float diff = std::abs(pt.separation - targetSep);
+            if (diff < minDiff) {
+                minDiff = diff;
+                closestPt = pt;
+            }
+        }
+        return closestPt;
+    };
+
+    // Test lookup at separation R = 2.0 Bohr (exactly on the grid)
+    float testSep = 2.0f;
+    SweepPoint marker = lookupClosest(testSep);
+    EXPECT_NEAR(marker.separation, testSep, 1e-5);
+    
+    // Check that lookup values match direct calculations
+    double S = OverlapIntegral::ComputeAnalytical1s(testSep);
+    EnergyResult expected = MolecularEnergyModel::ComputeEnergies(testSep, S);
+    EXPECT_NEAR(marker.bondingEnergy, expected.bondingEnergy, 1e-5);
+    EXPECT_NEAR(marker.antibondingEnergy, expected.antibondingEnergy, 1e-5);
+    EXPECT_NEAR(marker.overlap, S, 1e-5);
+
+    // Test lookup at a non-grid separation R = 2.02 Bohr
+    float testSepNonGrid = 2.02f;
+    SweepPoint markerNonGrid = lookupClosest(testSepNonGrid);
+    // The closest point should be 2.00 Bohr (diff <= 0.02 Bohr)
+    EXPECT_LT(std::abs(markerNonGrid.separation - testSepNonGrid), 0.03f);
+    EXPECT_NEAR(markerNonGrid.separation, 2.0f, 1e-5);
+}
+
+class MockCameraController : public CameraController {
+public:
+    int MousePressedCount = 0;
+    int MouseScrolledCount = 0;
+
+    void OnUpdate(float) override {}
+    bool OnEvent(Event& e) override {
+        if (e.GetType() == EventType::MouseButtonPressed) MousePressedCount++;
+        if (e.GetType() == EventType::MouseScrolled) MouseScrolledCount++;
+        return false; // Return false so other subscribers can run and verify propagation
+    }
+};
+
+TEST(HydrogenOrbitalTests, ValidateInputEventRouting)
+{
+    // 1. Setup event bus, camera manager, and mock controller
+    EventBus bus;
+    CameraManager manager(bus);
+    
+    auto controller = std::make_unique<MockCameraController>();
+    auto* ctrlPtr = controller.get();
+    manager.SetController(std::move(controller));
+
+    // Auxiliary variables and subscribers to detect if events propagate past CameraManager
+    bool pressPropagated = false;
+    bool scrollPropagated = false;
+
+    auto pressSub = bus.Subscribe<MouseButtonPressedEvent>([&](const MouseButtonPressedEvent&) {
+        pressPropagated = true;
+        return false;
+    });
+
+    auto scrollSub = bus.Subscribe<MouseScrolledEvent>([&](const MouseScrolledEvent&) {
+        scrollPropagated = true;
+        return false;
+    });
+
+    // Verify initial count is zero
+    EXPECT_EQ(ctrlPtr->MousePressedCount, 0);
+    EXPECT_EQ(ctrlPtr->MouseScrolledCount, 0);
+
+    // 2. Test event routing without ImGui context (headless mode)
+    {
+        pressPropagated = false;
+        scrollPropagated = false;
+
+        bus.Post(MouseButtonPressedEvent(0, 0));
+        bus.Post(MouseScrolledEvent(0.0f, 1.0f));
+        bus.Dispatch();
+
+        EXPECT_EQ(ctrlPtr->MousePressedCount, 1);
+        EXPECT_EQ(ctrlPtr->MouseScrolledCount, 1);
+        EXPECT_TRUE(pressPropagated);
+        EXPECT_TRUE(scrollPropagated);
+    }
+
+    // 3. Setup ImGui context and verify events are blocked when WantCaptureMouse is true
+    ImGui::CreateContext();
+    ImGui::GetIO().WantCaptureMouse = true;
+
+    {
+        pressPropagated = false;
+        scrollPropagated = false;
+
+        bus.Post(MouseButtonPressedEvent(0, 0));
+        bus.Post(MouseScrolledEvent(0.0f, 1.0f));
+        bus.Dispatch();
+
+        // Counts should remain at 1 (not route to camera controller)
+        EXPECT_EQ(ctrlPtr->MousePressedCount, 1);
+        EXPECT_EQ(ctrlPtr->MouseScrolledCount, 1);
+        
+        // Propagation should be blocked (events marked handled before reaching general observers)
+        EXPECT_FALSE(pressPropagated);
+        EXPECT_FALSE(scrollPropagated);
+    }
+
+    // 4. Verify events route normally when WantCaptureMouse is false
+    ImGui::GetIO().WantCaptureMouse = false;
+
+    {
+        pressPropagated = false;
+        scrollPropagated = false;
+
+        bus.Post(MouseButtonPressedEvent(0, 0));
+        bus.Post(MouseScrolledEvent(0.0f, 1.0f));
+        bus.Dispatch();
+
+        // Counts should increment to 2
+        EXPECT_EQ(ctrlPtr->MousePressedCount, 2);
+        EXPECT_EQ(ctrlPtr->MouseScrolledCount, 2);
+        
+        // Propagation should succeed
+        EXPECT_TRUE(pressPropagated);
+        EXPECT_TRUE(scrollPropagated);
+    }
+
+    // Clean up
+    ImGui::DestroyContext();
 }
 
 

@@ -14,6 +14,7 @@
 #include "visualization/OverlapIntegral.hpp"
 #include "visualization/MolecularEnergyModel.hpp"
 #include "visualization/EnergySweep.hpp"
+#include "visualization/MolecularOrbitalFactory.hpp"
 #include "resources/loaders/ShaderLoader.hpp"
 #include "core/Log.hpp"
 
@@ -107,7 +108,7 @@ void MolecularOrbitalExplorerModule::OnEnter()
         ORB_CORE_ERROR("MolecularOrbitalExplorerModule: Failed to load point or resolve shaders.");
     }
 
-    m_ActiveWaveFunction = std::make_shared<H2MolecularOrbital>(m_MOType, m_Separation);
+    m_ActiveWaveFunction = MolecularOrbitalFactory::Create(m_MOType, m_Separation);
     m_SamplingPipeline   = std::make_shared<MonteCarloSamplingPipeline>();
     
     m_ProbabilityCloud   = std::make_shared<StochasticProbabilityCloud>(
@@ -122,6 +123,9 @@ void MolecularOrbitalExplorerModule::OnEnter()
     m_PointsVAO = std::make_unique<GLVertexArray>();
 
     m_ProbabilityCloud->Resample(m_ActiveSampleCount);
+
+    // Pre-cache energy sweep results for the visual graph
+    m_CachedSweepResult = EnergySweep::RunSweep(0.5f, 10.0f, 0.05f);
 
     // Check if auto-generation is requested via environment variable
     if (const char* env = std::getenv("ORBITAL_GENERATE_VERIFICATION")) {
@@ -164,21 +168,47 @@ void MolecularOrbitalExplorerModule::Update(float dt)
 
 void MolecularOrbitalExplorerModule::UpdateMOState()
 {
-    m_ActiveWaveFunction = std::make_shared<H2MolecularOrbital>(m_MOType, m_Separation);
+    m_ActiveWaveFunction = MolecularOrbitalFactory::Create(m_MOType, m_Separation);
     
     if (m_ExposureMode == ExposureMode::PerOrbital) {
         switch (m_MOType) {
-            case H2MolecularOrbital::Type::Sigma1s:
+            case MolecularOrbitalType::Sigma1s:
                 m_Exposure = 2.6f;
                 m_IntensityScale = 0.5f;
                 m_ParticleSize = 4.0f;
                 m_Contrast = 1.0f;
                 break;
-            case H2MolecularOrbital::Type::Sigma1sStar:
+            case MolecularOrbitalType::Sigma1sStar:
                 m_Exposure = 3.0f;
                 m_IntensityScale = 0.5f;
                 m_ParticleSize = 4.0f;
                 m_Contrast = 1.2f;
+                break;
+            case MolecularOrbitalType::Sigma2p:
+                m_Exposure = 3.0f;
+                m_IntensityScale = 0.7f;
+                m_ParticleSize = 4.0f;
+                m_Contrast = 1.2f;
+                break;
+            case MolecularOrbitalType::Sigma2pStar:
+                m_Exposure = 3.2f;
+                m_IntensityScale = 0.7f;
+                m_ParticleSize = 4.0f;
+                m_Contrast = 1.2f;
+                break;
+            case MolecularOrbitalType::Pi2pX:
+            case MolecularOrbitalType::Pi2pY:
+                m_Exposure = 2.8f;
+                m_IntensityScale = 0.6f;
+                m_ParticleSize = 4.0f;
+                m_Contrast = 1.1f;
+                break;
+            case MolecularOrbitalType::Pi2pXStar:
+            case MolecularOrbitalType::Pi2pYStar:
+                m_Exposure = 3.0f;
+                m_IntensityScale = 0.6f;
+                m_ParticleSize = 4.0f;
+                m_Contrast = 1.1f;
                 break;
         }
     }
@@ -260,7 +290,7 @@ void MolecularOrbitalExplorerModule::Render()
         m_GenerateVerificationPackage = false;
 
         float originalSeparation = m_Separation;
-        H2MolecularOrbital::Type originalType = m_MOType;
+        MolecularOrbitalType originalType = m_MOType;
         uint32_t originalSampleCount = m_ActiveSampleCount;
 
         auto* controller = dynamic_cast<ArcballController*>(m_Engine.GetCameraManager().GetController());
@@ -290,19 +320,31 @@ void MolecularOrbitalExplorerModule::Render()
             { "top",      glm::radians(0.0f),  glm::radians(0.001f) }
         };
 
-        H2MolecularOrbital::Type statesToCapture[] = {
-            H2MolecularOrbital::Type::Sigma1s,
-            H2MolecularOrbital::Type::Sigma1sStar
+        MolecularOrbitalType statesToCapture[] = {
+            MolecularOrbitalType::Sigma1s,
+            MolecularOrbitalType::Sigma1sStar,
+            MolecularOrbitalType::Sigma2p,
+            MolecularOrbitalType::Sigma2pStar,
+            MolecularOrbitalType::Pi2pX,
+            MolecularOrbitalType::Pi2pXStar,
+            MolecularOrbitalType::Pi2pY,
+            MolecularOrbitalType::Pi2pYStar
         };
 
         const char* stateNames[] = {
             "sigma_1s",
-            "sigma_1s_star"
+            "sigma_1s_star",
+            "sigma_2p",
+            "sigma_2p_star",
+            "pi_2px",
+            "pi_2px_star",
+            "pi_2py",
+            "pi_2py_star"
         };
 
         double separationsToCapture[] = { 10.0, 6.0, 3.0, 1.5 };
 
-        for (int i = 0; i < 2; ++i) {
+        for (int i = 0; i < 8; ++i) {
             m_MOType = statesToCapture[i];
             
             for (double sep : separationsToCapture) {
@@ -385,10 +427,19 @@ void MolecularOrbitalExplorerModule::OnParameterPanel()
     ImGui::Text("Molecular Orbital (H2)");
     bool stateChanged = false;
     
-    const char* moNames[] = { "σ(1s) - Bonding", "σ*(1s) - Antibonding" };
+    const char* moNames[] = {
+        "σ(1s) - Bonding",
+        "σ*(1s) - Antibonding",
+        "σ(2p) - Bonding",
+        "σ*(2p) - Antibonding",
+        "π(2p_x) - Bonding",
+        "π*(2p_x) - Antibonding",
+        "π(2p_y) - Bonding",
+        "π*(2p_y) - Antibonding"
+    };
     int currentMoIdx = static_cast<int>(m_MOType);
-    if (ImGui::Combo("Orbital Select", &currentMoIdx, moNames, 2)) {
-        m_MOType = static_cast<H2MolecularOrbital::Type>(currentMoIdx);
+    if (ImGui::Combo("Orbital Select", &currentMoIdx, moNames, 8)) {
+        m_MOType = static_cast<MolecularOrbitalType>(currentMoIdx);
         UpdateMOState();
         stateChanged = true;
     }
@@ -411,10 +462,16 @@ void MolecularOrbitalExplorerModule::OnParameterPanel()
     ImGui::BulletText("HAB (Resonance Integral):  %.4f eV", energyResults.HAB);
     
     // Estimated bond order
-    double orbitalBondOrder = (m_MOType == H2MolecularOrbital::Type::Sigma1s) ? 0.5 : -0.5;
+    bool isBonding = (m_MOType == MolecularOrbitalType::Sigma1s || 
+                      m_MOType == MolecularOrbitalType::Sigma2p ||
+                      m_MOType == MolecularOrbitalType::Pi2pX ||
+                      m_MOType == MolecularOrbitalType::Pi2pY);
+    double orbitalBondOrder = isBonding ? 0.5 : -0.5;
     ImGui::BulletText("Orbital Bond Order Contrib: %+.1f", orbitalBondOrder);
-    ImGui::BulletText("Estimated H2 Bond Order:    %.1f (if σ(1s) is filled with 2e-)", 
-                      (m_MOType == H2MolecularOrbital::Type::Sigma1s) ? 1.0 : 0.0);
+    if (m_MOType == MolecularOrbitalType::Sigma1s || m_MOType == MolecularOrbitalType::Sigma1sStar) {
+        ImGui::BulletText("Estimated H2 Bond Order:    %.1f (if σ(1s) is filled with 2e-)", 
+                          (m_MOType == MolecularOrbitalType::Sigma1s) ? 1.0 : 0.0);
+    }
 
     // Sample count selector
     const char* sampleCountLabels[] = { "100k", "250k", "500k", "1M" };
@@ -447,17 +504,220 @@ void MolecularOrbitalExplorerModule::OnParameterPanel()
     std::string label = m_ActiveWaveFunction->GetLabel();
     std::string desc = m_ActiveWaveFunction->GetDescription();
     int energyOrder = m_ActiveWaveFunction->GetEnergyOrdering();
-    bool isBonding = (m_MOType == H2MolecularOrbital::Type::Sigma1s);
-    bool hasNodalPlane = (m_MOType == H2MolecularOrbital::Type::Sigma1sStar);
+    double midpointDensity = m_ActiveWaveFunction->ProbabilityDensity(glm::vec3(0.0f));
+
+    const char* orbitalTypeStr = "";
+    const char* classificationStr = isBonding ? "Bonding" : "Antibonding";
+    const char* nodalStructureStr = "";
+    int nodalPlanesCount = 0;
+
+    switch (m_MOType) {
+        case MolecularOrbitalType::Sigma1s:
+            orbitalTypeStr = "σ (Sigma)";
+            nodalStructureStr = "No nodal planes";
+            nodalPlanesCount = 0;
+            break;
+        case MolecularOrbitalType::Sigma1sStar:
+            orbitalTypeStr = "σ* (Sigma Antibonding)";
+            nodalStructureStr = "1 vertical nodal plane (x=0)";
+            nodalPlanesCount = 1;
+            break;
+        case MolecularOrbitalType::Sigma2p:
+            orbitalTypeStr = "σ (Sigma)";
+            nodalStructureStr = "2 nodal planes (at atomic nuclei: x = ±R/2)";
+            nodalPlanesCount = 2;
+            break;
+        case MolecularOrbitalType::Sigma2pStar:
+            orbitalTypeStr = "σ* (Sigma Antibonding)";
+            nodalStructureStr = "3 nodal planes (x=0 and atomic nuclei: x = ±R/2)";
+            nodalPlanesCount = 3;
+            break;
+        case MolecularOrbitalType::Pi2pX:
+            orbitalTypeStr = "π (Pi)";
+            nodalStructureStr = "1 nodal plane containing bond axis (z=0)";
+            nodalPlanesCount = 1;
+            break;
+        case MolecularOrbitalType::Pi2pXStar:
+            orbitalTypeStr = "π* (Pi Antibonding)";
+            nodalStructureStr = "2 nodal planes (z=0 containing bond axis, and x=0)";
+            nodalPlanesCount = 2;
+            break;
+        case MolecularOrbitalType::Pi2pY:
+            orbitalTypeStr = "π (Pi)";
+            nodalStructureStr = "1 nodal plane containing bond axis (y=0)";
+            nodalPlanesCount = 1;
+            break;
+        case MolecularOrbitalType::Pi2pYStar:
+            orbitalTypeStr = "π* (Pi Antibonding)";
+            nodalStructureStr = "2 nodal planes (y=0 containing bond axis, and x=0)";
+            nodalPlanesCount = 2;
+            break;
+    }
     
     ImGui::Text("Orbital Name: %s", label.c_str());
-    ImGui::Text("Classification: %s", isBonding ? "Bonding" : "Antibonding");
-    ImGui::Text("Nodal Plane (x=0): %s", hasNodalPlane ? "Present" : "Absent");
-    ImGui::Text("Relative Energy Level: %s", (energyOrder == 1) ? "Lower (Symmetric/Stable)" : "Higher (Antisymmetric/Unstable)");
-    ImGui::Text("Bond Order Contribution: %s", isBonding ? "+0.5" : "-0.5");
+    ImGui::Text("Orbital Type: %s", orbitalTypeStr);
+    ImGui::Text("Classification: %s", classificationStr);
+    ImGui::Text("Expected Nodal Structure: %s (planes count: %d)", nodalStructureStr, nodalPlanesCount);
+    ImGui::Text("Midpoint Density (x=0): %.6e", midpointDensity);
+    ImGui::Text("Relative Energy Level: %d (lower is more stable)", energyOrder);
+    ImGui::Text("Bond Order Contribution: %s%.1f", (orbitalBondOrder > 0.0) ? "+" : "", orbitalBondOrder);
     
     ImGui::Spacing();
     ImGui::TextWrapped("Description: %s", desc.c_str());
+
+    ImGui::Separator();
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Energy Curve Explorer Section
+    // ─────────────────────────────────────────────────────────────────────────
+    if (ImGui::CollapsingHeader("Energy Curve Explorer", ImGuiTreeNodeFlags_DefaultOpen)) {
+        ImGui::TextWrapped("Potential energy curves showing bonding and antibonding states. Click/drag on the graph to adjust separation.");
+
+        // Custom canvas draw code
+        ImVec2 canvas_pos = ImGui::GetCursorScreenPos();
+        ImVec2 canvas_size = ImVec2(ImGui::GetContentRegionAvail().x, 220.0f);
+        if (canvas_size.x < 50.0f) canvas_size.x = 50.0f;
+
+        ImGui::InvisibleButton("energy_canvas", canvas_size);
+        ImDrawList* draw_list = ImGui::GetWindowDrawList();
+
+        // Draw canvas background and border
+        draw_list->AddRectFilled(canvas_pos, ImVec2(canvas_pos.x + canvas_size.x, canvas_pos.y + canvas_size.y), IM_COL32(20, 20, 20, 255), 4.0f);
+        draw_list->AddRect(canvas_pos, ImVec2(canvas_pos.x + canvas_size.x, canvas_pos.y + canvas_size.y), IM_COL32(60, 60, 60, 255), 4.0f);
+
+        // Padding/margins for axes
+        float pad_left = 40.0f, pad_right = 15.0f, pad_top = 20.0f, pad_bottom = 25.0f;
+        float plot_x0 = canvas_pos.x + pad_left;
+        float plot_y0 = canvas_pos.y + pad_top;
+        float plot_x1 = canvas_pos.x + canvas_size.x - pad_right;
+        float plot_y1 = canvas_pos.y + canvas_size.y - pad_bottom;
+        float plot_w = plot_x1 - plot_x0;
+        float plot_h = plot_y1 - plot_y0;
+
+        float y_min = -25.0f;
+        float y_max = 25.0f;
+
+        auto MapCoords = [&](float R, float E) -> ImVec2 {
+            float t_x = (R - 0.5f) / (10.0f - 0.5f);
+            float E_clamped = std::clamp(E, y_min, y_max);
+            float t_y = (E_clamped - y_min) / (y_max - y_min);
+            return ImVec2(plot_x0 + t_x * plot_w, plot_y1 - t_y * plot_h);
+        };
+
+        // Handle user interaction (dragging/clicking on canvas)
+        if (ImGui::IsItemActive() && plot_w > 0.0f) {
+            ImVec2 mouse_pos = ImGui::GetMousePos();
+            float relative_x = (mouse_pos.x - plot_x0) / plot_w;
+            float new_sep = 0.5f + relative_x * (10.0f - 0.5f);
+            m_Separation = std::clamp(new_sep, 0.5f, 10.0f);
+            stateChanged = true;
+        }
+
+        // Draw horizontal grid lines and labels
+        for (float e_val = -20.0f; e_val <= 20.0f; e_val += 10.0f) {
+            ImVec2 pt_left = MapCoords(0.5f, e_val);
+            ImVec2 pt_right = MapCoords(10.0f, e_val);
+            draw_list->AddLine(pt_left, pt_right, IM_COL32(50, 50, 50, 255), 1.0f);
+            
+            char buf[32];
+            sprintf(buf, "%d", static_cast<int>(e_val));
+            draw_list->AddText(ImVec2(canvas_pos.x + 5.0f, pt_left.y - 7.0f), IM_COL32(180, 180, 180, 255), buf);
+        }
+
+        // Draw separation grid lines and labels
+        for (float sep_val = 1.0f; sep_val <= 10.0f; sep_val += 1.0f) {
+            ImVec2 pt_top = MapCoords(sep_val, y_max);
+            ImVec2 pt_bottom = MapCoords(sep_val, y_min);
+            draw_list->AddLine(pt_top, pt_bottom, IM_COL32(50, 50, 50, 255), 1.0f);
+            
+            char buf[32];
+            sprintf(buf, "%.0f", sep_val);
+            draw_list->AddText(ImVec2(pt_bottom.x - 4.0f, plot_y1 + 5.0f), IM_COL32(180, 180, 180, 255), buf);
+        }
+
+        // Draw Separated H(1s) Limit (-13.6 eV) dashed line
+        ImVec2 pt_limit_left = MapCoords(0.5f, -13.6057f);
+        ImVec2 pt_limit_right = MapCoords(10.0f, -13.6057f);
+        float dash_step = 6.0f;
+        for (float dx = pt_limit_left.x; dx < pt_limit_right.x; dx += dash_step * 2.0f) {
+            float next_dx = std::min(dx + dash_step, pt_limit_right.x);
+            draw_list->AddLine(ImVec2(dx, pt_limit_left.y), ImVec2(next_dx, pt_limit_left.y), IM_COL32(120, 120, 120, 255), 1.5f);
+        }
+        draw_list->AddText(ImVec2(pt_limit_left.x + 10.0f, pt_limit_left.y - 15.0f), IM_COL32(150, 150, 150, 255), "H(1s) Limit (-13.6 eV)");
+
+        // Draw axes labels
+        draw_list->AddText(ImVec2(canvas_pos.x + 5.0f, canvas_pos.y + 2.0f), IM_COL32(220, 220, 220, 255), "Energy (eV)");
+        draw_list->AddText(ImVec2(plot_x1 - 65.0f, plot_y1 - 18.0f), IM_COL32(220, 220, 220, 255), "R (Bohr)");
+
+        // Draw curves with clipping enabled
+        draw_list->PushClipRect(ImVec2(plot_x0, plot_y0), ImVec2(plot_x1, plot_y1), true);
+
+        for (size_t i = 0; i < m_CachedSweepResult.points.size() - 1; ++i) {
+            const auto& pt0 = m_CachedSweepResult.points[i];
+            const auto& pt1 = m_CachedSweepResult.points[i+1];
+
+            // Cyan for bonding curve
+            draw_list->AddLine(MapCoords(pt0.separation, static_cast<float>(pt0.bondingEnergy)),
+                               MapCoords(pt1.separation, static_cast<float>(pt1.bondingEnergy)),
+                               IM_COL32(0, 220, 220, 255), 2.5f);
+
+            // Crimson/Orange for antibonding curve
+            draw_list->AddLine(MapCoords(pt0.separation, static_cast<float>(pt0.antibondingEnergy)),
+                               MapCoords(pt1.separation, static_cast<float>(pt1.antibondingEnergy)),
+                               IM_COL32(255, 80, 80, 255), 2.5f);
+        }
+
+        draw_list->PopClipRect();
+
+        // Draw live separation marker
+        float marker_x = plot_x0 + (m_Separation - 0.5f) / (10.0f - 0.5f) * plot_w;
+        draw_list->AddLine(ImVec2(marker_x, plot_y0), ImVec2(marker_x, plot_y1), IM_COL32(200, 200, 200, 150), 1.0f);
+
+        ImVec2 p_bond = MapCoords(m_Separation, static_cast<float>(energyResults.bondingEnergy));
+        ImVec2 p_anti = MapCoords(m_Separation, static_cast<float>(energyResults.antibondingEnergy));
+
+        draw_list->AddCircleFilled(p_bond, 5.0f, IM_COL32(0, 255, 255, 255));
+        draw_list->AddCircle(p_bond, 5.0f, IM_COL32(255, 255, 255, 255), 0, 1.5f);
+
+        draw_list->AddCircleFilled(p_anti, 5.0f, IM_COL32(255, 80, 80, 255));
+        draw_list->AddCircle(p_anti, 5.0f, IM_COL32(255, 255, 255, 255), 0, 1.5f);
+
+        // Display current information text
+        ImGui::Spacing();
+        ImGui::Columns(2, "sweep_columns", false);
+        ImGui::Text("Current Separation: %.2f Bohr", m_Separation);
+        ImGui::TextColored(ImVec4(0.0f, 0.9f, 0.9f, 1.0f), "Bonding (E+):      %.4f eV", energyResults.bondingEnergy);
+        ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "Antibonding (E-):  %.4f eV", energyResults.antibondingEnergy);
+
+        ImGui::NextColumn();
+        ImGui::Text("Equilibrium Sep:    %.2f Bohr", m_CachedSweepResult.equilibriumSeparation);
+        ImGui::Text("Min Bonding Energy: %.4f eV", m_CachedSweepResult.minimumBondingEnergy);
+        ImGui::Columns(1);
+
+        // Educational Content
+        ImGui::Spacing();
+        if (ImGui::CollapsingHeader("Potential Energy Curve Explanation", ImGuiTreeNodeFlags_None)) {
+            ImGui::TextWrapped("**Why bonding energy reaches a minimum (equilibrium):**\n"
+                               "As nuclear separation R decreases, constructive interference between atomic wavefunctions "
+                               "increases electron density in the internuclear region. This shared charge density shields "
+                               "the positive nuclei, reducing their mutual repulsion and stabilizing the molecule (E+ drops). "
+                               "At very short distances (R < 2.0 Bohr), the positive-positive proton Coulombic repulsion (proportional to 1/R) "
+                               "grows faster than electronic stabilization. The minimum energy point represents the stable equilibrium "
+                               "separation (bond length) where these forces balance.");
+            ImGui::Spacing();
+            ImGui::TextWrapped("**Why antibonding energy remains higher:**\n"
+                               "The antisymmetric LCAO combination has a vertical nodal plane at the midpoint x = 0 where "
+                               "electron density is strictly zero. Because negative charge density is suppressed between the nuclei, "
+                               "there is no electrostatic shielding to counteract the proton-proton repulsion. Consequently, the "
+                               "potential energy is strictly repulsive and remains higher than the separated atom limit (-13.6 eV) "
+                               "at all separations.");
+            ImGui::Spacing();
+            ImGui::TextWrapped("**Relationship between overlap and stabilization:**\n"
+                               "A larger overlap integral S represents greater spatial sharing of electrons between the nuclei. "
+                               "As overlap increases, the resonance coupling term (HAB) becomes more negative, which shifts "
+                               "the bonding energy lower (stabilization) and pushes the antibonding energy higher (destabilization).");
+        }
+    }
 
     ImGui::Separator();
 

@@ -1,9 +1,11 @@
 #pragma once
 
 #include "visualization/VisualizationModule.hpp"
-#include "visualization/H2MolecularOrbital.hpp"
+#include "visualization/MolecularOrbital.hpp"
+#include "visualization/MolecularOrbitalType.hpp"
 #include "visualization/MonteCarloSamplingPipeline.hpp"
 #include "visualization/StochasticProbabilityCloud.hpp"
+#include "visualization/EnergySweep.hpp"
 #include "renderer/backend/GLFramebuffer.hpp"
 #include "renderer/backend/GLVertexArray.hpp"
 #include "resources/Handle.hpp"
@@ -36,7 +38,7 @@ private:
     Engine& m_Engine;
 
     // Active LCAO simulation state
-    std::shared_ptr<H2MolecularOrbital> m_ActiveWaveFunction;
+    std::shared_ptr<MolecularOrbital> m_ActiveWaveFunction;
     std::shared_ptr<MonteCarloSamplingPipeline> m_SamplingPipeline;
     std::shared_ptr<StochasticProbabilityCloud> m_ProbabilityCloud;
 
@@ -50,7 +52,7 @@ private:
 
     // User LCAO parameters
     float m_Separation = 2.0f; // Bohr radii
-    H2MolecularOrbital::Type m_MOType = H2MolecularOrbital::Type::Sigma1s;
+    MolecularOrbitalType m_MOType = MolecularOrbitalType::Sigma1s;
 
     enum class ExposureMode { Manual, PerOrbital, HistogramBased };
     ExposureMode m_ExposureMode = ExposureMode::PerOrbital;
@@ -79,6 +81,9 @@ private:
     float m_SweepEquilibriumSep = 0.0f;
     double m_SweepMinBondingEnergy = 0.0;
     std::string m_SweepExportPath = "";
+
+    // Cached sweep data for the Energy Curve Explorer graph
+    SweepResult m_CachedSweepResult;
 };
 
 } // namespace Orbital

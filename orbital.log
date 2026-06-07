@@ -1,2 +1,3 @@
-[10:47:35.999] [ORBITAL] [info] Logging initialised
-[10:47:38.780] [ORBITAL] [info] Exported energy sweep results to: exports/h2_energy_curve.csv
+[10:12:53.772] [ORBITAL] [info] Logging initialised
+[10:12:56.474] [ORBITAL] [info] Exported energy sweep results to: exports/h2_energy_curve.csv
+[10:12:56.671] [ORBITAL] [trace] CameraManager: controller set

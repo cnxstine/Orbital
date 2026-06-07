@@ -12,6 +12,7 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <GLFW/glfw3.h>
+#include <filesystem>
 
 namespace Orbital {
 
@@ -62,6 +63,28 @@ Engine::Engine(const EngineSpec& spec)
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     ImGui::StyleColorsDark();
+
+    // Load custom font with Greek and Superscripts/Subscripts support
+    static const ImWchar ranges[] = {
+        0x0020, 0x00FF, // Basic Latin + Latin-1 Supplement (includes basic ASCII, degree, superscript 1, 2, 3)
+        0x0370, 0x03FF, // Greek and Coptic (includes σ, π)
+        0x2070, 0x209F, // Superscripts and Subscripts (includes ⁺, ⁻, ₂, etc.)
+        0,
+    };
+    
+    ImFont* font = nullptr;
+    if (std::filesystem::exists("C:/Windows/Fonts/segoeui.ttf")) {
+        font = io.Fonts->AddFontFromFileTTF("C:/Windows/Fonts/segoeui.ttf", 16.0f, nullptr, ranges);
+    } else if (std::filesystem::exists("C:/Windows/Fonts/arial.ttf")) {
+        font = io.Fonts->AddFontFromFileTTF("C:/Windows/Fonts/arial.ttf", 16.0f, nullptr, ranges);
+    }
+
+    if (font) {
+        io.FontDefault = font;
+        ORB_CORE_INFO("Loaded custom UI font (Segoe UI / Arial) with Greek and Superscript/Subscript glyph ranges");
+    } else {
+        ORB_CORE_WARN("Failed to load custom UI font; falling back to default ImGui font");
+    }
 
     ImGui_ImplGlfw_InitForOpenGL(m_Window->GetNativeHandle(), true);
     ImGui_ImplOpenGL3_Init("#version 460");

@@ -27,6 +27,11 @@ public:
      * @brief Get the description.
      */
     [[nodiscard]] virtual std::string GetDescription() const = 0;
+
+    /**
+     * @brief Get the maximum probability density of this molecular orbital.
+     */
+    [[nodiscard]] virtual double GetMaxDensity() const = 0;
 };
 
 } // namespace Orbital
