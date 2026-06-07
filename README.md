@@ -6,6 +6,16 @@ Orbital teaches how quantum mechanics gives rise to atoms, chemical bonds, cryst
 
 ---
 
+## Features
+
+*   **Hydrogenic Wavefunction Solver:** Real-time 3D evaluation and rendering of atomic hydrogenic wavefunctions ($1s, 2s, 2p_x, 2p_y, 2p_z$).
+*   **Molecular Orbital Explorer:** Real-time simulation of diatomic molecular orbitals (constructive/destructive interference) using the Linear Combination of Atomic Orbitals (LCAO) approximation. Supports $\sigma(1s), \sigma^*(1s)$, $\sigma(2p_z), \sigma^*(2p_z)$, $\pi(2p_x), \pi^*(2p_x)$, and $\pi(2p_y), \pi^*(2p_y)$ states.
+*   **Overlap & Energy sweep Calculations:** Real-time numerical integration of the overlap integral $S(R) = \int \psi_A \psi_B \, dV$ and LCAO bonding/antibonding energy sweeps ($E_+(R), E_-(R)$) with respect to internuclear distance.
+*   **Interactive Energy Curve Explorer:** Plots bonding and antibonding energy curves using a custom high-performance drawing canvas in Dear ImGui, with live marker tracking and interactive cursor dragging to change orbital separation instantly.
+*   **Precise Input routing Boundary:** Prevents viewport camera zooming and drag-rotations when interacting with scrollable UI panels, sliders, and combo box dropdowns.
+
+---
+
 ## Technology Stack
 
 | Layer | Technology |
@@ -36,14 +46,21 @@ Orbital teaches how quantum mechanics gives rise to atoms, chemical bonds, cryst
 
 ```bash
 # Configure (first time: downloads dependencies via FetchContent)
-cmake -B build -DCMAKE_BUILD_TYPE=Debug
+cmake -B build -DCMAKE_BUILD_TYPE=Release
 
 # Build
 cmake --build build --parallel
 
 # Run
 ./build/bin/orbital        # Linux/macOS
-.\build\bin\Debug\orbital.exe  # Windows
+.\build\bin\Release\orbital.exe  # Windows (Release mode)
+```
+
+### Run Unit Tests
+
+To run the full suite of simulation and input routing tests:
+```bash
+./build/bin/test_simulation.exe
 ```
 
 ### Build configurations
@@ -53,20 +70,6 @@ cmake --build build --parallel
 | `Debug` | Development — full debug info, logging, GL debug callback |
 | `RelWithDebInfo` | Profiling — optimised but debuggable |
 | `Release` | Distribution — `-O3 -march=native` |
-
-```bash
-# Release build
-cmake -B build-release -DCMAKE_BUILD_TYPE=Release
-cmake --build build-release --parallel
-```
-
-### Options
-
-| CMake Option | Default | Description |
-|---|---|---|
-| `ORBITAL_BUILD_TESTS` | `ON` | Build unit tests |
-| `ORBITAL_SANITIZERS` | `OFF` | Enable ASan + UBSan (Debug only) |
-| `ORBITAL_ASSET_DIR` | `<source>/assets` | Path to runtime assets |
 
 ---
 
@@ -85,8 +88,9 @@ Orbital/
 │   ├── renderer/       Layer 2: Frame graph, GL backend (DSA)
 │   ├── camera/         Layer 2: Camera abstraction, controllers
 │   ├── scene/          Layer 2: ECS, systems
+│   ├── visualization/  Layer 2: Quantum visualization modules, wavefunctions, LCAO math
 │   └── main.cpp
-├── tests/              Unit + integration tests
+├── tests/              Unit + integration tests (using GoogleTest)
 └── tools/              CLI utilities (shader preprocessor, etc.)
 ```
 
@@ -113,12 +117,14 @@ See [docs/architecture/orbital_architecture.md](docs/architecture/orbital_archit
 ## Roadmap
 
 - [x] Rendering foundation (window, context, shader, camera)
-- [ ] Hydrogen orbital wavefunction visualization
+- [x] Hydrogen orbital wavefunction visualization ($1s, 2s, 2p$)
+- [x] Diatomic Molecular orbital explorer ($1s, 2p$ bonding/antibonding states)
+- [x] LCAO overlap integration and energy modeling
+- [x] Interactive UI plotting (Energy Curve Explorer)
+- [x] Unicode symbol font support ($\sigma, \pi$) and input event routing boundary
 - [ ] Atom explorer module
-- [ ] Molecular orbital builder
 - [ ] Crystal lattice viewer
 - [ ] Band structure diagram
-- [ ] Dear ImGui panel system
 - [ ] Simulation thread + Eigen solvers
 
 ---
