@@ -1,6 +1,7 @@
 #include "visualization/ModuleLayer.hpp"
 #include "visualization/OrbitalViewerModule.hpp"
 #include "visualization/MolecularOrbitalExplorerModule.hpp"
+#include "visualization/HybridOrbitalExplorerModule.hpp"
 #include "core/Log.hpp"
 #include <imgui.h>
 
@@ -51,17 +52,21 @@ void ModuleLayer::OnImGui()
 {
     ORB_CORE_INFO("ModuleLayer::OnImGui called");
     ImGui::Begin("Module Navigator");
-    const char* moduleNames[] = { "Hydrogen Orbital Explorer", "Bonding Explorer" };
+    const char* moduleNames[] = { "Hydrogen Orbital Explorer", "Bonding Explorer", "Hybrid Orbital Explorer" };
     int activeIdx = 0;
     if (dynamic_cast<MolecularOrbitalExplorerModule*>(m_ActiveModule.get())) {
         activeIdx = 1;
+    } else if (dynamic_cast<HybridOrbitalExplorerModule*>(m_ActiveModule.get())) {
+        activeIdx = 2;
     }
 
-    if (ImGui::Combo("Active Module", &activeIdx, moduleNames, 2)) {
+    if (ImGui::Combo("Active Module", &activeIdx, moduleNames, 3)) {
         if (activeIdx == 0) {
             SetActiveModule(std::make_unique<OrbitalViewerModule>(m_Engine));
         } else if (activeIdx == 1) {
             SetActiveModule(std::make_unique<MolecularOrbitalExplorerModule>(m_Engine));
+        } else if (activeIdx == 2) {
+            SetActiveModule(std::make_unique<HybridOrbitalExplorerModule>(m_Engine));
         }
     }
     ImGui::End();

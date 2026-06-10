@@ -6,6 +6,8 @@
 #include "visualization/EnergySweep.hpp"
 #include "visualization/MolecularOrbitalFactory.hpp"
 #include "visualization/MolecularOrbitalType.hpp"
+#include "visualization/HybridOrbital.hpp"
+#include "visualization/HybridOrbitalType.hpp"
 #include "camera/CameraManager.hpp"
 #include "camera/CameraController.hpp"
 #include "events/events/InputEvents.hpp"
@@ -609,6 +611,107 @@ TEST(HydrogenOrbitalTests, ValidateInputEventRouting)
 
     // Clean up
     ImGui::DestroyContext();
+}
+
+TEST(HydrogenOrbitalTests, ValidateHybridOrbitalNormalization)
+{
+    // Helper function for 3D numerical integration of |psi|^2 over a grid
+    auto integrateProbability = [](const WaveFunction& orbital, double limit, double step) -> double {
+        double sum = 0.0;
+        const double dV = step * step * step;
+        
+        for (double x = -limit; x <= limit; x += step) {
+            for (double y = -limit; y <= limit; y += step) {
+                for (double z = -limit; z <= limit; z += step) {
+                    sum += orbital.ProbabilityDensity({static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)});
+                }
+            }
+        }
+        return sum * dV;
+    };
+
+    // 1. Validate sp Normalization: Integrate up to 15 Bohr radii with step = 0.25
+    HybridOrbital spOrb(HybridOrbitalType::sp, 0);
+    double integralSp = integrateProbability(spOrb, 15.0, 0.25);
+    EXPECT_NEAR(integralSp, 1.0, 0.02); // within 2%
+
+    // 2. Validate sp2 Normalization: Integrate up to 15 Bohr radii with step = 0.25
+    HybridOrbital sp2Orb(HybridOrbitalType::sp2, 0);
+    double integralSp2 = integrateProbability(sp2Orb, 15.0, 0.25);
+    EXPECT_NEAR(integralSp2, 1.0, 0.02); // within 2%
+
+    // 3. Validate sp3 Normalization: Integrate up to 15 Bohr radii with step = 0.25
+    HybridOrbital sp3Orb(HybridOrbitalType::sp3, 0);
+    double integralSp3 = integrateProbability(sp3Orb, 15.0, 0.25);
+    EXPECT_NEAR(integralSp3, 1.0, 0.02); // within 2%
+}
+
+TEST(HydrogenOrbitalTests, ValidateHybridOrbitalGeometry)
+{
+    // 1. Verify sp (Linear, 180 degrees)
+    HybridOrbital sp0(HybridOrbitalType::sp, 0);
+    HybridOrbital sp1(HybridOrbitalType::sp, 1);
+    
+    // Evaluate along +Z and -Z at distance r = 1.0 Bohr
+    double d0_posZ = sp0.ProbabilityDensity({0.0f, 0.0f, 1.0f});
+    double d0_negZ = sp0.ProbabilityDensity({0.0f, 0.0f, -1.0f});
+    EXPECT_GT(d0_posZ, d0_negZ * 10.0); // Lobe points along +Z
+
+    double d1_posZ = sp1.ProbabilityDensity({0.0f, 0.0f, 1.0f});
+    double d1_negZ = sp1.ProbabilityDensity({0.0f, 0.0f, -1.0f});
+    EXPECT_GT(d1_negZ, d1_posZ * 10.0); // Lobe points along -Z
+
+    // Direction vectors
+    glm::vec3 v_sp0(0.0f, 0.0f, 1.0f);
+    glm::vec3 v_sp1(0.0f, 0.0f, -1.0f);
+    double cos_angle_sp = glm::dot(v_sp0, v_sp1);
+    EXPECT_NEAR(cos_angle_sp, -1.0, 1e-5);
+    EXPECT_NEAR(std::acos(cos_angle_sp) * 180.0 / std::numbers::pi, 180.0, 0.1);
+
+    // 2. Verify sp2 (Trigonal Planar, 120 degrees)
+    HybridOrbital sp2_0(HybridOrbitalType::sp2, 0);
+    HybridOrbital sp2_1(HybridOrbitalType::sp2, 1);
+    HybridOrbital sp2_2(HybridOrbitalType::sp2, 2);
+
+    glm::vec3 v_sp2_0(1.0f, 0.0f, 0.0f);
+    glm::vec3 v_sp2_1(-0.5f, std::sqrt(3.0f)/2.0f, 0.0f);
+    glm::vec3 v_sp2_2(-0.5f, -std::sqrt(3.0f)/2.0f, 0.0f);
+
+    // Verify directional peak for each at distance r = 1.0 Bohr
+    EXPECT_GT(sp2_0.ProbabilityDensity(v_sp2_0 * 1.0f), sp2_0.ProbabilityDensity(v_sp2_1 * 1.0f) * 5.0);
+    EXPECT_GT(sp2_1.ProbabilityDensity(v_sp2_1 * 1.0f), sp2_1.ProbabilityDensity(v_sp2_0 * 1.0f) * 5.0);
+    EXPECT_GT(sp2_2.ProbabilityDensity(v_sp2_2 * 1.0f), sp2_2.ProbabilityDensity(v_sp2_0 * 1.0f) * 5.0);
+
+    // Verify angles are 120 degrees
+    double cos_01 = glm::dot(v_sp2_0, v_sp2_1);
+    double cos_12 = glm::dot(v_sp2_1, v_sp2_2);
+    double cos_20 = glm::dot(v_sp2_2, v_sp2_0);
+    EXPECT_NEAR(cos_01, -0.5, 1e-5);
+    EXPECT_NEAR(cos_12, -0.5, 1e-5);
+    EXPECT_NEAR(cos_20, -0.5, 1e-5);
+    EXPECT_NEAR(std::acos(cos_01) * 180.0 / std::numbers::pi, 120.0, 0.1);
+
+    // 3. Verify sp3 (Tetrahedral, 109.47 degrees)
+    HybridOrbital sp3_0(HybridOrbitalType::sp3, 0);
+    HybridOrbital sp3_1(HybridOrbitalType::sp3, 1);
+    HybridOrbital sp3_2(HybridOrbitalType::sp3, 2);
+    HybridOrbital sp3_3(HybridOrbitalType::sp3, 3);
+
+    float val = 1.0f / std::sqrt(3.0f);
+    glm::vec3 v_sp3_0(val, val, val);
+    glm::vec3 v_sp3_1(val, -val, -val);
+    glm::vec3 v_sp3_2(-val, val, -val);
+    glm::vec3 v_sp3_3(-val, -val, val);
+
+    EXPECT_GT(sp3_0.ProbabilityDensity(v_sp3_0 * 2.0f), sp3_0.ProbabilityDensity(v_sp3_1 * 2.0f) * 4.0);
+    EXPECT_GT(sp3_1.ProbabilityDensity(v_sp3_1 * 2.0f), sp3_1.ProbabilityDensity(v_sp3_0 * 2.0f) * 4.0);
+    EXPECT_GT(sp3_2.ProbabilityDensity(v_sp3_2 * 2.0f), sp3_2.ProbabilityDensity(v_sp3_0 * 2.0f) * 4.0);
+    EXPECT_GT(sp3_3.ProbabilityDensity(v_sp3_3 * 2.0f), sp3_3.ProbabilityDensity(v_sp3_0 * 2.0f) * 4.0);
+
+    // Verify angles are 109.47 degrees
+    double cos_sp3 = glm::dot(v_sp3_0, v_sp3_1);
+    EXPECT_NEAR(cos_sp3, -1.0/3.0, 1e-5);
+    EXPECT_NEAR(std::acos(cos_sp3) * 180.0 / std::numbers::pi, 109.47, 0.5);
 }
 
 

@@ -17,6 +17,8 @@
 #include "visualization/MolecularOrbitalFactory.hpp"
 #include "resources/loaders/ShaderLoader.hpp"
 #include "core/Log.hpp"
+#include "visualization/ModuleLayer.hpp"
+#include "visualization/HybridOrbitalExplorerModule.hpp"
 
 #include <imgui.h>
 #include <glad/gl.h>
@@ -394,8 +396,20 @@ void MolecularOrbitalExplorerModule::Render()
         }
 
         if (m_AutoExitAfterGeneration) {
-            ORB_CORE_INFO("Auto-exit requested after generating verification package. Requesting shutdown...");
-            m_Engine.RequestShutdown();
+            ORB_CORE_INFO("Auto-exit requested after generating verification package. Transitioning to HybridOrbitalExplorerModule...");
+            ModuleLayer* moduleLayer = nullptr;
+            for (auto& layer : m_Engine.GetLayerStack()) {
+                moduleLayer = dynamic_cast<ModuleLayer*>(layer.get());
+                if (moduleLayer) {
+                    break;
+                }
+            }
+            if (moduleLayer) {
+                moduleLayer->SetActiveModule(std::make_unique<HybridOrbitalExplorerModule>(m_Engine));
+            } else {
+                ORB_CORE_WARN("Could not find ModuleLayer, requesting immediate shutdown.");
+                m_Engine.RequestShutdown();
+            }
         }
     } else {
         RenderFrameInternal();

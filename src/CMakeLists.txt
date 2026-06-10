@@ -168,6 +168,8 @@ add_library(orbital_visualization STATIC
     visualization/EnergySweep.cpp
     visualization/LCAOMolecularOrbital.cpp
     visualization/MolecularOrbitalFactory.cpp
+    visualization/HybridOrbital.cpp
+    visualization/HybridOrbitalExplorerModule.cpp
 )
 
 target_include_directories(orbital_visualization
