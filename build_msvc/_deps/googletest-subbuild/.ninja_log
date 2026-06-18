@@ -1,0 +1,21 @@
+# ninja log v6
+12	154	8034874440521729	googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-mkdir	d6d5a6deb5ecdb10
+12	154	8034874440521729	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-mkdir	d6d5a6deb5ecdb10
+155	5380	8034874492770026	googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-download	a47b3a5d01e37f9b
+155	5380	8034874492770026	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-download	a47b3a5d01e37f9b
+5381	5751	8034874492927310	googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-update	5700b50d6e156336
+5381	5751	8034874492927310	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-update	5700b50d6e156336
+5751	5894	8034874497921016	googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-patch	f0d23a460e0a9533
+5751	5894	8034874497921016	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-patch	f0d23a460e0a9533
+5895	6029	8034874499267466	googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-configure	788442290f824e5a
+5895	6029	8034874499267466	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-configure	788442290f824e5a
+6030	6177	8034874500748496	googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-build	62846e8e34d12b8f
+6030	6177	8034874500748496	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-build	62846e8e34d12b8f
+6178	6312	8034874502096812	googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-install	2537db66899b89bf
+6178	6312	8034874502096812	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-install	2537db66899b89bf
+6312	6458	8034874503556129	googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-test	5c136fe4765235e1
+6312	6458	8034874503556129	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-test	5c136fe4765235e1
+6459	6654	8034874505500248	CMakeFiles/googletest-populate-complete	9824d106c01c98a0
+6459	6654	8034874505500248	googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-done	9824d106c01c98a0
+6459	6654	8034874505500248	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/googletest-subbuild/CMakeFiles/googletest-populate-complete	9824d106c01c98a0
+6459	6654	8034874505500248	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-done	9824d106c01c98a0

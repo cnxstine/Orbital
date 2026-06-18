@@ -4,6 +4,10 @@
 // assets/shaders/geometry/mesh.frag
 // Geometry pass fragment shader — Blinn-Phong shading with material uniforms.
 //
+// STATUS: FUTURE INFRASTRUCTURE (not loaded at runtime in v1.0)
+//   Paired with mesh.vert. Will be activated when RenderSystem + MeshComponent
+//   are implemented. See: src/scene/systems/RenderSystem.hpp
+//
 // Shading model: Blinn-Phong (placeholder for future PBR pass).
 // The ambient term ensures no surface is fully black.
 //

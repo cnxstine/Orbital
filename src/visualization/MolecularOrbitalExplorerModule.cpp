@@ -16,6 +16,7 @@
 #include "visualization/EnergySweep.hpp"
 #include "visualization/MolecularOrbitalFactory.hpp"
 #include "resources/loaders/ShaderLoader.hpp"
+#include "utils/BMPWriter.hpp"
 #include "core/Log.hpp"
 #include "visualization/ModuleLayer.hpp"
 #include "visualization/HybridOrbitalExplorerModule.hpp"
@@ -28,70 +29,6 @@
 #include <vector>
 
 namespace Orbital {
-
-#pragma pack(push, 1)
-struct BMPFileHeader {
-    uint16_t fileType{0x4D42}; // "BM"
-    uint32_t fileSize{0};
-    uint16_t reserved1{0};
-    uint16_t reserved2{0};
-    uint32_t offsetData{54};
-};
-
-struct BMPInfoHeader {
-    uint32_t size{40};
-    int32_t width{0};
-    int32_t height{0};
-    uint16_t planes{1};
-    uint16_t bitCount{24};
-    uint32_t compression{0};
-    uint32_t sizeImage{0};
-    int32_t xPixelsPerMeter{0};
-    int32_t yPixelsPerMeter{0};
-    uint32_t colorsUsed{0};
-    uint32_t colorsImportant{0};
-};
-#pragma pack(pop)
-
-static bool SaveBMP(const std::string& filepath, int width, int height, const uint8_t* rgbData) {
-    std::ofstream file(filepath, std::ios::binary);
-    if (!file) {
-        return false;
-    }
-
-    int rowSize = (width * 3 + 3) & ~3;
-    int padding = rowSize - (width * 3);
-    uint32_t fileSize = 54 + rowSize * height;
-
-    BMPFileHeader fileHeader;
-    fileHeader.fileSize = fileSize;
-
-    BMPInfoHeader infoHeader;
-    infoHeader.width = width;
-    infoHeader.height = height;
-    infoHeader.sizeImage = rowSize * height;
-
-    file.write(reinterpret_cast<const char*>(&fileHeader), sizeof(fileHeader));
-    file.write(reinterpret_cast<const char*>(&infoHeader), sizeof(infoHeader));
-
-    std::vector<uint8_t> paddingBytes(padding, 0);
-    for (int y = 0; y < height; ++y) {
-        const uint8_t* row = rgbData + y * width * 3;
-        for (int x = 0; x < width; ++x) {
-            uint8_t r = row[x * 3 + 0];
-            uint8_t g = row[x * 3 + 1];
-            uint8_t b = row[x * 3 + 2];
-            file.put(b);
-            file.put(g);
-            file.put(r);
-        }
-        if (padding > 0) {
-            file.write(reinterpret_cast<const char*>(paddingBytes.data()), padding);
-        }
-    }
-
-    return true;
-}
 
 MolecularOrbitalExplorerModule::MolecularOrbitalExplorerModule(Engine& engine)
     : m_Engine(engine)
@@ -134,6 +71,15 @@ void MolecularOrbitalExplorerModule::OnEnter()
         if (std::string(env) == "1") {
             m_GenerateVerificationPackage = true;
             m_AutoExitAfterGeneration = true;
+
+            // Export energy curve CSV as part of automated verification
+            std::filesystem::create_directories("exports");
+            bool csvOk = EnergySweep::ExportToCSV(m_CachedSweepResult, "exports/h2_energy_curve.csv");
+            if (csvOk) {
+                ORB_CORE_INFO("[AutoVerify] Exported energy sweep CSV: exports/h2_energy_curve.csv");
+            } else {
+                ORB_CORE_ERROR("[AutoVerify] Failed to export energy sweep CSV.");
+            }
         }
     }
 }
@@ -374,7 +320,7 @@ void MolecularOrbitalExplorerModule::Render()
                     char sepStr[16];
                     sprintf(sepStr, "%.1f", sep);
                     std::string filename = "screenshots/hydrogen_" + std::string(stateNames[i]) + "_" + sepStr + "bohr_" + std::string(preset.name) + ".bmp";
-                    if (SaveBMP(filename, static_cast<int>(width), static_cast<int>(height), pixels.data())) {
+                    if (BMPWriter::Save(filename, static_cast<int>(width), static_cast<int>(height), pixels.data())) {
                         ORB_CORE_INFO("Saved orbital screenshot: {}", filename);
                     } else {
                         ORB_CORE_ERROR("Failed to save orbital screenshot: {}", filename);
@@ -496,9 +442,9 @@ void MolecularOrbitalExplorerModule::OnParameterPanel()
     }
 
     // Swappable exposure mode selector
-    const char* exposureModeLabels[] = { "Manual", "PerOrbital (Auto)", "HistogramBased" };
+    const char* exposureModeLabels[] = { "Manual", "PerOrbital (Auto)" };
     int expModeIdx = static_cast<int>(m_ExposureMode);
-    if (ImGui::Combo("Exposure Mode", &expModeIdx, exposureModeLabels, 3)) {
+    if (ImGui::Combo("Exposure Mode", &expModeIdx, exposureModeLabels, 2)) {
         m_ExposureMode = static_cast<ExposureMode>(expModeIdx);
         if (m_ExposureMode == ExposureMode::PerOrbital) {
             UpdateMOState();

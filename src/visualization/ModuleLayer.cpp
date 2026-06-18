@@ -78,6 +78,9 @@ void ModuleLayer::OnImGui()
 
 bool ModuleLayer::OnEvent(Event& event)
 {
+    if (m_ActiveModule) {
+        return m_ActiveModule->OnEvent(event);
+    }
     return false;
 }
 

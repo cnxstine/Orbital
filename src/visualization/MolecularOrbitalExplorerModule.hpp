@@ -54,7 +54,7 @@ private:
     float m_Separation = 2.0f; // Bohr radii
     MolecularOrbitalType m_MOType = MolecularOrbitalType::Sigma1s;
 
-    enum class ExposureMode { Manual, PerOrbital, HistogramBased };
+    enum class ExposureMode { Manual, PerOrbital };
     ExposureMode m_ExposureMode = ExposureMode::PerOrbital;
 
     int m_SelectedSampleCountIdx = 1; // Default to 250k

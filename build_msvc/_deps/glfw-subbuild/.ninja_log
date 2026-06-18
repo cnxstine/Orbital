@@ -1,0 +1,21 @@
+# ninja log v6
+14	174	8034871486939501	glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-mkdir	34fe634cf2e5ba0
+14	174	8034871486939501	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/glfw-subbuild/glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-mkdir	34fe634cf2e5ba0
+176	8083	8034871566047541	glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-download	3eef4353bc6c3a87
+176	8083	8034871566047541	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/glfw-subbuild/glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-download	3eef4353bc6c3a87
+8084	8430	8034871566189804	glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-update	312391938666144c
+8084	8430	8034871566189804	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/glfw-subbuild/glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-update	312391938666144c
+8440	8596	8034871571153145	glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-patch	8dad40460bfa1673
+8440	8596	8034871571153145	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/glfw-subbuild/glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-patch	8dad40460bfa1673
+8597	8771	8034871572902125	glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-configure	6527d57493ec6abe
+8597	8771	8034871572902125	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/glfw-subbuild/glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-configure	6527d57493ec6abe
+8772	8925	8034871574464589	glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-build	ab2b2febb71601ad
+8772	8925	8034871574464589	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/glfw-subbuild/glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-build	ab2b2febb71601ad
+8926	9077	8034871575957133	glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-install	f4c11815cbea828a
+8926	9077	8034871575957133	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/glfw-subbuild/glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-install	f4c11815cbea828a
+9077	9225	8034871577446818	glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-test	92c16054ea73c727
+9077	9225	8034871577446818	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/glfw-subbuild/glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-test	92c16054ea73c727
+9226	9419	8034871579265842	CMakeFiles/glfw-populate-complete	f3083116b05ebb87
+9226	9419	8034871579265842	glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-done	f3083116b05ebb87
+9226	9419	8034871579265842	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/glfw-subbuild/CMakeFiles/glfw-populate-complete	f3083116b05ebb87
+9226	9419	8034871579265842	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/glfw-subbuild/glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-done	f3083116b05ebb87

@@ -64,7 +64,7 @@ private:
     bool m_GenerateVerificationPackage = false;
     bool m_AutoExitAfterGeneration = false;
 
-    enum class ExposureMode { Manual, PerOrbital, HistogramBased };
+    enum class ExposureMode { Manual, PerOrbital };
     ExposureMode m_ExposureMode = ExposureMode::PerOrbital;
 
     int m_SelectedSampleCountIdx = 1; // Default to 250k

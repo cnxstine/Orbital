@@ -1,0 +1,21 @@
+# ninja log v6
+14	191	8034871363821507	spdlog-populate-prefix/src/spdlog-populate-stamp/spdlog-populate-mkdir	6807a7c38b6dfb68
+14	191	8034871363821507	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/spdlog-subbuild/spdlog-populate-prefix/src/spdlog-populate-stamp/spdlog-populate-mkdir	6807a7c38b6dfb68
+193	8282	8034871444729065	spdlog-populate-prefix/src/spdlog-populate-stamp/spdlog-populate-download	5e90970e28465aa7
+193	8282	8034871444729065	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/spdlog-subbuild/spdlog-populate-prefix/src/spdlog-populate-stamp/spdlog-populate-download	5e90970e28465aa7
+8283	8668	8034871444885169	spdlog-populate-prefix/src/spdlog-populate-stamp/spdlog-populate-update	2fc96d51a0fced65
+8283	8668	8034871444885169	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/spdlog-subbuild/spdlog-populate-prefix/src/spdlog-populate-stamp/spdlog-populate-update	2fc96d51a0fced65
+8668	8821	8034871450136306	spdlog-populate-prefix/src/spdlog-populate-stamp/spdlog-populate-patch	35ad5c7bae65540b
+8668	8821	8034871450136306	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/spdlog-subbuild/spdlog-populate-prefix/src/spdlog-populate-stamp/spdlog-populate-patch	35ad5c7bae65540b
+8822	8963	8034871451537531	spdlog-populate-prefix/src/spdlog-populate-stamp/spdlog-populate-configure	b006ab7cfd1df0d9
+8822	8963	8034871451537531	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/spdlog-subbuild/spdlog-populate-prefix/src/spdlog-populate-stamp/spdlog-populate-configure	b006ab7cfd1df0d9
+8964	9114	8034871453050894	spdlog-populate-prefix/src/spdlog-populate-stamp/spdlog-populate-build	30ee23989297e8b1
+8964	9114	8034871453050894	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/spdlog-subbuild/spdlog-populate-prefix/src/spdlog-populate-stamp/spdlog-populate-build	30ee23989297e8b1
+9115	9259	8034871454505958	spdlog-populate-prefix/src/spdlog-populate-stamp/spdlog-populate-install	3e9ec88c1b16c41a
+9115	9259	8034871454505958	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/spdlog-subbuild/spdlog-populate-prefix/src/spdlog-populate-stamp/spdlog-populate-install	3e9ec88c1b16c41a
+9260	9410	8034871455985806	spdlog-populate-prefix/src/spdlog-populate-stamp/spdlog-populate-test	90767d569ecf7a92
+9260	9410	8034871455985806	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/spdlog-subbuild/spdlog-populate-prefix/src/spdlog-populate-stamp/spdlog-populate-test	90767d569ecf7a92
+9411	9614	8034871458027276	CMakeFiles/spdlog-populate-complete	620ebbcd61c1bd34
+9411	9614	8034871458027276	spdlog-populate-prefix/src/spdlog-populate-stamp/spdlog-populate-done	620ebbcd61c1bd34
+9411	9614	8034871458027276	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/spdlog-subbuild/CMakeFiles/spdlog-populate-complete	620ebbcd61c1bd34
+9411	9614	8034871458027276	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/spdlog-subbuild/spdlog-populate-prefix/src/spdlog-populate-stamp/spdlog-populate-done	620ebbcd61c1bd34

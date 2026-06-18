@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.25)
 
 project(Orbital
-    VERSION     0.1.0
+    VERSION     1.0.0
     DESCRIPTION "Interactive Scientific Visualization Platform for Quantum Mechanics"
     LANGUAGES   CXX C
 )

@@ -1,0 +1,21 @@
+# ninja log v6
+12	157	8034871589727909	glm-populate-prefix/src/glm-populate-stamp/glm-populate-mkdir	d31515fc751e4101
+12	157	8034871589727909	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/glm-subbuild/glm-populate-prefix/src/glm-populate-stamp/glm-populate-mkdir	d31515fc751e4101
+167	49889	8034872087099893	glm-populate-prefix/src/glm-populate-stamp/glm-populate-download	1d2f615f2ef5838
+167	49889	8034872087099893	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/glm-subbuild/glm-populate-prefix/src/glm-populate-stamp/glm-populate-download	1d2f615f2ef5838
+49889	50232	8034872087242304	glm-populate-prefix/src/glm-populate-stamp/glm-populate-update	7b5729939c5443c4
+49889	50232	8034872087242304	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/glm-subbuild/glm-populate-prefix/src/glm-populate-stamp/glm-populate-update	7b5729939c5443c4
+50233	50372	8034872091935571	glm-populate-prefix/src/glm-populate-stamp/glm-populate-patch	39f5baf8282b2b24
+50233	50372	8034872091935571	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/glm-subbuild/glm-populate-prefix/src/glm-populate-stamp/glm-populate-patch	39f5baf8282b2b24
+50372	50516	8034872093370984	glm-populate-prefix/src/glm-populate-stamp/glm-populate-configure	b4378b9676757ea3
+50372	50516	8034872093370984	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/glm-subbuild/glm-populate-prefix/src/glm-populate-stamp/glm-populate-configure	b4378b9676757ea3
+50517	50661	8034872094820047	glm-populate-prefix/src/glm-populate-stamp/glm-populate-build	aef26c742119f07b
+50517	50661	8034872094820047	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/glm-subbuild/glm-populate-prefix/src/glm-populate-stamp/glm-populate-build	aef26c742119f07b
+50661	50806	8034872096262441	glm-populate-prefix/src/glm-populate-stamp/glm-populate-install	f9dd448ce1fcacaf
+50661	50806	8034872096262441	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/glm-subbuild/glm-populate-prefix/src/glm-populate-stamp/glm-populate-install	f9dd448ce1fcacaf
+50807	50980	8034872098010124	glm-populate-prefix/src/glm-populate-stamp/glm-populate-test	cfcdadcabb47a504
+50807	50980	8034872098010124	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/glm-subbuild/glm-populate-prefix/src/glm-populate-stamp/glm-populate-test	cfcdadcabb47a504
+50981	51158	8034872099799808	CMakeFiles/glm-populate-complete	f458c09f02d2fb31
+50981	51158	8034872099799808	glm-populate-prefix/src/glm-populate-stamp/glm-populate-done	f458c09f02d2fb31
+50981	51158	8034872099799808	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/glm-subbuild/CMakeFiles/glm-populate-complete	f458c09f02d2fb31
+50981	51158	8034872099799808	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/glm-subbuild/glm-populate-prefix/src/glm-populate-stamp/glm-populate-done	f458c09f02d2fb31

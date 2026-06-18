@@ -6,6 +6,7 @@
  */
 
 #include "core/Error.hpp"
+#include "events/Event.hpp"
 #include <string_view>
 
 namespace Orbital {
@@ -45,6 +46,17 @@ public:
      * @brief Draw the module-specific ImGui parameters side panel.
      */
     virtual void OnParameterPanel() = 0;
+
+    /**
+     * @brief Handle an incoming engine event (input, window, etc.).
+     *
+     * Default implementation is a no-op (returns false).
+     * Override to consume events and stop further propagation.
+     *
+     * @param event The event to handle.
+     * @return true if the event was consumed; false to allow propagation.
+     */
+    virtual bool OnEvent(Event& event) { (void)event; return false; }
 };
 
 } // namespace Orbital

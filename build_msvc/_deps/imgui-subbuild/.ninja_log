@@ -1,0 +1,21 @@
+# ninja log v6
+13	173	8034874249830320	imgui-populate-prefix/src/imgui-populate-stamp/imgui-populate-mkdir	ce507173bb3b442f
+13	173	8034874249830320	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/imgui-subbuild/imgui-populate-prefix/src/imgui-populate-stamp/imgui-populate-mkdir	ce507173bb3b442f
+175	17266	8034874420767596	imgui-populate-prefix/src/imgui-populate-stamp/imgui-populate-download	d2f73b4f437d9cde
+175	17266	8034874420767596	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/imgui-subbuild/imgui-populate-prefix/src/imgui-populate-stamp/imgui-populate-download	d2f73b4f437d9cde
+17266	17616	8034874420913573	imgui-populate-prefix/src/imgui-populate-stamp/imgui-populate-update	87cb27f1f3f2ef42
+17266	17616	8034874420913573	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/imgui-subbuild/imgui-populate-prefix/src/imgui-populate-stamp/imgui-populate-update	87cb27f1f3f2ef42
+17617	17756	8034874425670274	imgui-populate-prefix/src/imgui-populate-stamp/imgui-populate-patch	b9e32fbf079abf09
+17617	17756	8034874425670274	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/imgui-subbuild/imgui-populate-prefix/src/imgui-populate-stamp/imgui-populate-patch	b9e32fbf079abf09
+17756	17896	8034874427072465	imgui-populate-prefix/src/imgui-populate-stamp/imgui-populate-configure	3115891170ab0f7f
+17756	17896	8034874427072465	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/imgui-subbuild/imgui-populate-prefix/src/imgui-populate-stamp/imgui-populate-configure	3115891170ab0f7f
+17897	18040	8034874428508628	imgui-populate-prefix/src/imgui-populate-stamp/imgui-populate-build	70de1959f8960e4e
+17897	18040	8034874428508628	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/imgui-subbuild/imgui-populate-prefix/src/imgui-populate-stamp/imgui-populate-build	70de1959f8960e4e
+18041	18178	8034874429890737	imgui-populate-prefix/src/imgui-populate-stamp/imgui-populate-install	7253f9c32347570d
+18041	18178	8034874429890737	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/imgui-subbuild/imgui-populate-prefix/src/imgui-populate-stamp/imgui-populate-install	7253f9c32347570d
+18179	18313	8034874431218486	imgui-populate-prefix/src/imgui-populate-stamp/imgui-populate-test	2967b5ae8bcdb891
+18179	18313	8034874431218486	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/imgui-subbuild/imgui-populate-prefix/src/imgui-populate-stamp/imgui-populate-test	2967b5ae8bcdb891
+18314	18501	8034874433123296	CMakeFiles/imgui-populate-complete	6da38c989bd1c627
+18314	18501	8034874433123296	imgui-populate-prefix/src/imgui-populate-stamp/imgui-populate-done	6da38c989bd1c627
+18314	18501	8034874433123296	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/imgui-subbuild/CMakeFiles/imgui-populate-complete	6da38c989bd1c627
+18314	18501	8034874433123296	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/imgui-subbuild/imgui-populate-prefix/src/imgui-populate-stamp/imgui-populate-done	6da38c989bd1c627

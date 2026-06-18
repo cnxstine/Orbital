@@ -1,0 +1,21 @@
+# ninja log v6
+13	158	8034874125419933	glad2-populate-prefix/src/glad2-populate-stamp/glad2-populate-mkdir	f3cd2825b96bbb9a
+13	158	8034874125419933	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/glad2-subbuild/glad2-populate-prefix/src/glad2-populate-stamp/glad2-populate-mkdir	f3cd2825b96bbb9a
+169	7518	8034874199023093	glad2-populate-prefix/src/glad2-populate-stamp/glad2-populate-download	f9067b95917b126c
+169	7518	8034874199023093	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/glad2-subbuild/glad2-populate-prefix/src/glad2-populate-stamp/glad2-populate-download	f9067b95917b126c
+7518	7855	8034874199174631	glad2-populate-prefix/src/glad2-populate-stamp/glad2-populate-update	5af44b196e8533ed
+7518	7855	8034874199174631	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/glad2-subbuild/glad2-populate-prefix/src/glad2-populate-stamp/glad2-populate-update	5af44b196e8533ed
+7864	8005	8034874203890245	glad2-populate-prefix/src/glad2-populate-stamp/glad2-populate-patch	cb75f2fe29ba865f
+7864	8005	8034874203890245	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/glad2-subbuild/glad2-populate-prefix/src/glad2-populate-stamp/glad2-populate-patch	cb75f2fe29ba865f
+8006	8156	8034874205406734	glad2-populate-prefix/src/glad2-populate-stamp/glad2-populate-configure	1c4df25df95e37a2
+8006	8156	8034874205406734	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/glad2-subbuild/glad2-populate-prefix/src/glad2-populate-stamp/glad2-populate-configure	1c4df25df95e37a2
+8157	8292	8034874206773850	glad2-populate-prefix/src/glad2-populate-stamp/glad2-populate-build	b32b52c8cac31c7b
+8157	8292	8034874206773850	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/glad2-subbuild/glad2-populate-prefix/src/glad2-populate-stamp/glad2-populate-build	b32b52c8cac31c7b
+8293	8432	8034874208163847	glad2-populate-prefix/src/glad2-populate-stamp/glad2-populate-install	498b4912b2e66056
+8293	8432	8034874208163847	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/glad2-subbuild/glad2-populate-prefix/src/glad2-populate-stamp/glad2-populate-install	498b4912b2e66056
+8432	8569	8034874209532834	glad2-populate-prefix/src/glad2-populate-stamp/glad2-populate-test	221e2e7bdd85b395
+8432	8569	8034874209532834	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/glad2-subbuild/glad2-populate-prefix/src/glad2-populate-stamp/glad2-populate-test	221e2e7bdd85b395
+8569	8755	8034874211392922	CMakeFiles/glad2-populate-complete	4436d2f3263c4c97
+8569	8755	8034874211392922	glad2-populate-prefix/src/glad2-populate-stamp/glad2-populate-done	4436d2f3263c4c97
+8569	8755	8034874211392922	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/glad2-subbuild/CMakeFiles/glad2-populate-complete	4436d2f3263c4c97
+8569	8755	8034874211392922	C:/Users/nxahw/Downloads/Orbital/build_msvc/_deps/glad2-subbuild/glad2-populate-prefix/src/glad2-populate-stamp/glad2-populate-done	4436d2f3263c4c97

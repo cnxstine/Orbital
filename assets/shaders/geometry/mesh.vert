@@ -4,6 +4,12 @@
 // assets/shaders/geometry/mesh.vert
 // Geometry pass vertex shader — transforms mesh vertices into clip space.
 //
+// STATUS: FUTURE INFRASTRUCTURE (not loaded at runtime in v1.0)
+//   This shader targets the RenderSystem + MeshComponent ECS rendering path.
+//   It will be wired up once MeshComponent and a proper MeshLoader are added.
+//   See: src/scene/systems/RenderSystem.hpp (currently a no-op stub)
+//        src/visualization/VisualizationComponents.hpp (IsosurfaceComponent)
+//
 // Vertex layout (matches GLVertexArray setup in MeshLoader):
 //   location 0 → vec3 Position  (world-space, pre-transform)
 //   location 1 → vec3 Normal    (object-space)

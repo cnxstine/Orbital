@@ -1,0 +1,5 @@
+if(EXISTS "C:/Users/nxahw/Downloads/Orbital/build_msvc/tests/test_simulation[1]_tests.cmake")
+  include("C:/Users/nxahw/Downloads/Orbital/build_msvc/tests/test_simulation[1]_tests.cmake")
+else()
+  add_test(test_simulation_NOT_BUILT test_simulation_NOT_BUILT)
+endif()

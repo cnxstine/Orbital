@@ -31,6 +31,20 @@ target_include_directories(imgui PUBLIC
 target_link_libraries(imgui PUBLIC glfw glad_gl_46)
 target_compile_definitions(imgui PRIVATE IMGUI_IMPL_OPENGL_LOADER_GLAD2)
 
+# ── Layer 2 : Utils ─────────────────────────────────────────────────────────
+# Provides: BMPWriter — shared screenshot/image output utilities.
+add_library(orbital_utils STATIC
+    utils/BMPWriter.cpp
+)
+
+target_include_directories(orbital_utils
+    PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(orbital_utils
+    PUBLIC orbital_core
+)
+
 # ── Layer 0 : Core ────────────────────────────────────────────────────────────
 # Provides: logging, error types, layer/stack, timing, engine bootstrap,
 #           GLFW window, input state, OpenGL context creation.
@@ -178,6 +192,7 @@ target_include_directories(orbital_visualization
 
 target_link_libraries(orbital_visualization
     PUBLIC orbital_scene
+    PUBLIC orbital_utils
 )
 
 # ── Executable ────────────────────────────────────────────────────────────────
@@ -191,6 +206,7 @@ target_link_libraries(orbital
         orbital_renderer
         orbital_camera
         orbital_scene
+        orbital_utils
         orbital_visualization
 )
 
